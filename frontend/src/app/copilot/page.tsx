@@ -349,17 +349,11 @@ export default function CopilotPage() {
   // ─────────────────────────────────────────────────────────────────────────
   return (
     <div className="space-y-6">
-      <header>
-        <h1 className="text-[2.2rem] font-bold tracking-tight">AI Copilot</h1>
-        <p className="mt-1 text-lg text-(--text-secondary)">
-          Your mental health companion is here to support you
-        </p>
-      </header>
-
       <div className="grid gap-6 xl:grid-cols-[1fr_320px]">
         {/* ── Chat panel ──────────────────────────────────────────────────── */}
         <section className="surface-card flex h-[calc(100vh-220px)] min-h-[560px] flex-col p-4 sm:p-5">
-
+        <header className="text-2xl font-bold text-center text-foreground  border-b border-(--border) pb-4">Chat with Antara</header>
+       
           {/* Message list */}
           <div ref={scrollRef} className="flex-1 space-y-4 overflow-y-auto pr-1">
             {historyQuery.isLoading && messages.length === 0 ? (

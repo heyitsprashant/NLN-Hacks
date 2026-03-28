@@ -14,7 +14,7 @@ import {
   X,
   RotateCcw,
 } from "lucide-react";
-
+import { useRouter } from "next/navigation";
 const links = [
  
   { href: "/journal",   label: "Journal",   icon: Book,            accent: "var(--accent-journal)"   },
@@ -28,13 +28,13 @@ const links = [
 export default function TopNav() {
   const pathname = usePathname();
   const [mobileOpen, setMobileOpen] = useState(false);
-
+  const router = useRouter();
   return (
     <header className="fixed top-0 left-0 right-0 z-50 border-b border-(--border) bg-white/80 backdrop-blur-md">
       <div className="mx-auto flex h-16 max-w-[1200px] items-center justify-between px-4 sm:px-6 lg:px-8">
 
         {/* Brand */}
-        <div className="flex flex-col leading-none select-none">
+        <div  onClick={() => router.push("/")} className="flex flex-col leading-none select-none">
           <span
             className="text-xl font-bold tracking-tight"
             style={{
@@ -126,19 +126,6 @@ export default function TopNav() {
               </Link>
             );
           })}
-          <button
-            type="button"
-            className="mt-2 flex items-center gap-2 rounded-xl border border-(--border) px-4 py-2.5 text-sm font-semibold text-(--text-secondary)"
-            onClick={() => {
-              if (typeof window !== "undefined") {
-                window.localStorage.removeItem("token");
-              }
-              setMobileOpen(false);
-            }}
-          >
-            <RotateCcw className="h-4 w-4" />
-            Reset Local Session
-          </button>
         </nav>
       )}
     </header>

@@ -197,11 +197,6 @@ export default function SettingsPage() {
 
   return (
     <div className="space-y-6">
-      <header>
-        <h1 className="text-[2.2rem] font-bold tracking-tight">Settings</h1>
-        <p className="mt-1 text-lg text-[var(--text-secondary)]">Manage your preferences and privacy</p>
-      </header>
-
       {settingsQuery.isError ? (
         <p className="surface-card p-3 text-sm text-red-700">{handleApiError(settingsQuery.error)}</p>
       ) : null}

@@ -177,10 +177,6 @@ export default function DashboardPage() {
 
   return (
     <div className="space-y-6">
-      <header>
-        <h1 className="text-[2.2rem] font-bold tracking-tight text-foreground">Dashboard</h1>
-        <p className="mt-1 text-lg text-(--text-secondary)">Your mental health overview for the past week</p>
-      </header>
 
       <section className="surface-card p-5 sm:p-6">
         <h2 className="text-xl font-semibold">Mood Trends</h2>
@@ -193,10 +189,6 @@ export default function DashboardPage() {
               <YAxis domain={[0, 1]} tick={{ fill: "#6b7280" }} axisLine={{ stroke: "#cbd5e1" }} />
               <Tooltip
                 contentStyle={{ borderRadius: 10, borderColor: "#e5e7eb" }}
-                formatter={(value: number, _name, item) => [
-                  `${value.toFixed(2)} (${item.payload.emotion})`,
-                  "Mood score",
-                ]}
               />
               <Line
                 type="monotone"

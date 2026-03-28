@@ -222,14 +222,10 @@ export default function JournalPage() {
 
   return (
     <div className="space-y-6">
-      <header>
-        <h1 className="text-[2.2rem] font-bold tracking-tight">Journal</h1>
-        <p className="mt-1 text-lg text-[var(--text-secondary)]">Document your thoughts and emotions</p>
-      </header>
-
+     
       <section className="surface-card p-5 sm:p-6">
         <h2 className="text-xl font-semibold">New Entry</h2>
-        <p className="text-sm text-[var(--text-secondary)]">Write about your day, feelings, or anything on your mind</p>
+        <p className="text-sm">Write about your day, feelings, or anything on your mind</p>
 
         <div className="mt-4">
           <textarea
@@ -248,7 +244,7 @@ export default function JournalPage() {
         </div>
 
         <div className="mt-3 flex items-center justify-between">
-          <span className="text-sm text-[var(--text-secondary)]">{entryText.length} characters</span>
+          <span className="text-sm ">{entryText.length} characters</span>
           <button
             type="button"
             className="inline-flex items-center gap-2 rounded-lg bg-gray-600 px-4 py-2 text-sm font-semibold text-white transition hover:bg-gray-700 disabled:cursor-not-allowed disabled:opacity-50"

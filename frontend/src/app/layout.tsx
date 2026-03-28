@@ -15,7 +15,7 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "MindCare | Mental Health Companion",
+  title: "Antara | Your Inner Voice",
   description: "Your mental health journal, insights, and AI copilot.",
 };
 

@@ -10,6 +10,27 @@ import { formatRelativeTime } from "@/lib/time";
 
 type VoiceState = "idle" | "recording" | "processing" | "speaking";
 
+// Minimal Web Speech API types (not present in all TS lib configurations)
+interface SpeechRecognitionAlternative { transcript: string }
+interface SpeechRecognitionResult { [index: number]: SpeechRecognitionAlternative }
+interface SpeechRecognitionResultList {
+  length: number;
+  [index: number]: SpeechRecognitionResult;
+}
+interface SpeechRecognitionEvent extends Event {
+  resultIndex: number;
+  results: SpeechRecognitionResultList;
+}
+interface SpeechRecognitionLike extends EventTarget {
+  continuous: boolean;
+  interimResults: boolean;
+  lang: string;
+  onresult: ((event: SpeechRecognitionEvent) => void) | null;
+  start(): void;
+  stop(): void;
+}
+type SpeechRecognitionCtor = new () => SpeechRecognitionLike;
+
 type VoiceHistoryItem = {
   id: string;
   userText: string;
@@ -20,7 +41,7 @@ type VoiceHistoryItem = {
 function getStateClasses(state: VoiceState): string {
   if (state === "recording") return "bg-red-500 text-white recording-pulse";
   if (state === "processing") return "bg-amber-500 text-white";
-  if (state === "speaking") return "bg-[var(--primary-blue)] text-white";
+  if (state === "speaking") return "bg-(--primary-blue) text-white";
   return "bg-slate-400 text-white";
 }
 
@@ -39,7 +60,7 @@ export default function VoicePage() {
   const audioContextRef = useRef<AudioContext | null>(null);
   const analyserRef = useRef<AnalyserNode | null>(null);
   const waveformRafRef = useRef<number | null>(null);
-  const speechRecognitionRef = useRef<SpeechRecognition | null>(null);
+  const speechRecognitionRef = useRef<SpeechRecognitionLike | null>(null);
 
   const historyQuery = useQuery<VoiceHistoryItem[]>({
     queryKey: ["voice-history"],
@@ -143,8 +164,9 @@ export default function VoicePage() {
   };
 
   const startTranscription = () => {
-    const SpeechRecognitionConstructor =
-      window.SpeechRecognition || window.webkitSpeechRecognition;
+    const SpeechRecognitionConstructor: SpeechRecognitionCtor | undefined =
+      (window as Window & { webkitSpeechRecognition?: SpeechRecognitionCtor }).webkitSpeechRecognition
+      ?? (window as Window & { SpeechRecognition?: SpeechRecognitionCtor }).SpeechRecognition;
 
     if (!SpeechRecognitionConstructor) return;
 
@@ -153,7 +175,7 @@ export default function VoicePage() {
     recognition.interimResults = true;
     recognition.lang = "en-US";
 
-    recognition.onresult = (event) => {
+    recognition.onresult = (event: SpeechRecognitionEvent) => {
       let text = "";
       for (let i = event.resultIndex; i < event.results.length; i += 1) {
         text += event.results[i][0]?.transcript ?? "";
@@ -258,10 +280,6 @@ export default function VoicePage() {
 
   return (
     <div className="space-y-6">
-      <header>
-        <h1 className="text-[2.2rem] font-bold tracking-tight">Voice Mode</h1>
-        <p className="mt-1 text-lg text-[var(--text-secondary)]">Speak naturally with your AI mental health companion</p>
-      </header>
 
       <section className="surface-card p-6 text-center sm:p-10">
         <button
@@ -284,23 +302,23 @@ export default function VoicePage() {
         </button>
 
         <h2 className="mt-6 text-3xl font-semibold">{stateTitle}</h2>
-        <p className="mt-2 text-base text-[var(--text-secondary)]">
+        <p className="mt-2 text-base text-(--text-secondary)">
           {state === "idle" ? "Click the microphone to start speaking" : "Voice interaction is currently active"}
         </p>
 
         <button
           type="button"
-          className="mt-6 rounded-lg border border-[var(--border)] bg-white px-4 py-2 text-sm font-semibold"
+          className="mt-6 rounded-lg border border-(--border) bg-white px-4 py-2 text-sm font-semibold"
           onClick={() => setIsMuted((value) => !value)}
         >
           {isMuted ? "Unmute" : "Mute"}
         </button>
 
-        <div className="mt-6 flex h-24 items-end justify-center gap-1 rounded-xl border border-[var(--border)] bg-[var(--surface-muted)] px-4 py-3">
+        <div className="mt-6 flex h-24 items-end justify-center gap-1 rounded-xl border border-(--border) bg-(--surface-muted) px-4 py-3">
           {waveBars.map((value, index) => (
             <span
               key={`wave-${index}`}
-              className="w-2 rounded-full bg-[var(--primary-blue)]"
+              className="w-2 rounded-full bg-(--primary-blue)"
               style={{ height: `${value}px` }}
             />
           ))}
@@ -310,7 +328,7 @@ export default function VoicePage() {
       <div className="grid gap-6 xl:grid-cols-2">
         <section className="surface-card p-5 sm:p-6">
           <h3 className="text-lg font-semibold">Live Transcription</h3>
-          <p className="text-sm text-[var(--text-secondary)]">Edit transcript before sending for AI analysis</p>
+          <p className="text-sm text-(--text-secondary)">Edit transcript before sending for AI analysis</p>
           <textarea
             value={transcript}
             onChange={(event) => setTranscript(event.target.value)}
@@ -322,30 +340,30 @@ export default function VoicePage() {
 
         <section className="surface-card p-5 sm:p-6">
           <h3 className="text-lg font-semibold">AI Response Player</h3>
-          <p className="text-sm text-[var(--text-secondary)]">Playback generated response with controls</p>
+          <p className="text-sm text-(--text-secondary)">Playback generated response with controls</p>
 
-          <div className="mt-4 rounded-lg border border-[var(--border)] bg-[var(--surface-muted)] p-4 text-sm leading-7">
+          <div className="mt-4 rounded-lg border border-(--border) bg-(--surface-muted) p-4 text-sm leading-7">
             {processMutation.isPending ? "Processing your voice input..." : aiResponse}
           </div>
 
           <div className="mt-4 flex flex-wrap items-center gap-2">
-            <button type="button" className="rounded-lg border border-[var(--border)] bg-white p-2" onClick={speakResponse}>
+            <button type="button" className="rounded-lg border border-(--border) bg-white p-2" onClick={speakResponse}>
               <Play className="h-4 w-4" />
             </button>
-            <button type="button" className="rounded-lg border border-[var(--border)] bg-white p-2" onClick={pauseSpeech}>
+            <button type="button" className="rounded-lg border border-(--border) bg-white p-2" onClick={pauseSpeech}>
               <Pause className="h-4 w-4" />
             </button>
-            <button type="button" className="rounded-lg border border-[var(--border)] bg-white p-2" onClick={resumeSpeech}>
+            <button type="button" className="rounded-lg border border-(--border) bg-white p-2" onClick={resumeSpeech}>
               <Volume2 className="h-4 w-4" />
             </button>
-            <button type="button" className="rounded-lg border border-[var(--border)] bg-white p-2" onClick={stopSpeech}>
+            <button type="button" className="rounded-lg border border-(--border) bg-white p-2" onClick={stopSpeech}>
               <Square className="h-4 w-4" />
             </button>
           </div>
 
           <div className="mt-4 grid gap-3 sm:grid-cols-2">
             <label className="space-y-1 text-sm">
-              <span className="font-semibold text-[var(--text-secondary)]">Volume</span>
+              <span className="font-semibold text-(--text-secondary)">Volume</span>
               <input
                 type="range"
                 min={0}
@@ -358,7 +376,7 @@ export default function VoicePage() {
             </label>
 
             <label className="space-y-1 text-sm">
-              <span className="font-semibold text-[var(--text-secondary)]">Speed</span>
+              <span className="font-semibold text-(--text-secondary)">Speed</span>
               <select
                 value={speed}
                 onChange={(event) => setSpeed(Number(event.target.value))}
@@ -375,7 +393,7 @@ export default function VoicePage() {
 
       <section className="surface-card p-5 sm:p-6">
         <h3 className="text-lg font-semibold">Conversation History</h3>
-        <p className="text-sm text-[var(--text-secondary)]">Your past voice interactions</p>
+        <p className="text-sm text-(--text-secondary)">Your past voice interactions</p>
 
         {historyQuery.isError ? (
           <p className="mt-4 rounded-lg border border-red-200 bg-red-50 p-3 text-sm text-red-700">
@@ -385,12 +403,12 @@ export default function VoicePage() {
 
         <div className="mt-5 space-y-4">
           {(historyQuery.data ?? []).map((item) => (
-            <article key={item.id} className="rounded-xl border border-[var(--border)] p-4">
-              <p className="text-xs font-semibold uppercase tracking-wide text-[var(--text-secondary)]">
+            <article key={item.id} className="rounded-xl border border-(--border) p-4">
+              <p className="text-xs font-semibold uppercase tracking-wide text-(--text-secondary)">
                 {formatRelativeTime(item.timestamp)}
               </p>
               <p className="mt-2 text-sm"><span className="font-semibold">You:</span> {item.userText}</p>
-              <p className="mt-2 text-sm text-[var(--text-secondary)]"><span className="font-semibold text-[var(--text-primary)]">AI:</span> {item.aiText}</p>
+              <p className="mt-2 text-sm text-(--text-secondary)"><span className="font-semibold text-foreground">AI:</span> {item.aiText}</p>
             </article>
           ))}
         </div>

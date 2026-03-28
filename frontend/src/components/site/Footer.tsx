@@ -21,7 +21,7 @@ export default function Footer() {
                 WebkitTextFillColor: "transparent",
               }}
             >
-              MindCare
+             Antara
             </span>
             <p className="text-sm text-(--text-secondary) leading-relaxed max-w-[220px]">
               Your personal mental health journal, insights, and AI companion — always here for you.
