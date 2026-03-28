@@ -21,7 +21,7 @@ const emotionStyles: Record<JournalEmotion, string> = {
   joy: "bg-[var(--emotion-joy)]",
   stress: "bg-[var(--emotion-stress)]",
   calm: "bg-[var(--emotion-calm)]",
-  neutral: "bg-slate-500",
+  neutral: "bg-[#9a9498]",
 };
 
 function getEmotionFromText(content: string): JournalEmotion {
@@ -221,17 +221,17 @@ export default function JournalPage() {
   };
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-8">
       <header>
-        <h1 className="text-[2.2rem] font-bold tracking-tight">Journal</h1>
-        <p className="mt-1 text-lg text-[var(--text-secondary)]">Document your thoughts and emotions</p>
+        <h1 className="text-3xl font-bold tracking-tight text-foreground">Journal</h1>
+        <p className="mt-2 text-base text-[var(--text-secondary)]">A safe space for your thoughts and feelings</p>
       </header>
 
-      <section className="surface-card p-5 sm:p-6">
-        <h2 className="text-xl font-semibold">New Entry</h2>
-        <p className="text-sm text-[var(--text-secondary)]">Write about your day, feelings, or anything on your mind</p>
+      <section className="surface-card p-6 sm:p-7">
+        <h2 className="text-lg font-semibold text-foreground">New Entry</h2>
+        <p className="mt-1 text-sm text-[var(--text-secondary)]">Write about your day, feelings, or anything on your mind</p>
 
-        <div className="mt-4">
+        <div className="mt-5">
           <textarea
             ref={textareaRef}
             value={entryText}
@@ -240,18 +240,18 @@ export default function JournalPage() {
               event.currentTarget.style.height = "120px";
               event.currentTarget.style.height = `${event.currentTarget.scrollHeight}px`;
             }}
-            placeholder="Start writing..."
-            className="field min-h-[120px] w-full resize-none p-4 text-sm outline-none"
+            placeholder="How are you feeling today..."
+            className="field min-h-[140px] w-full resize-none p-5 text-sm leading-7 outline-none"
             rows={3}
             aria-label="Journal entry text"
           />
         </div>
 
-        <div className="mt-3 flex items-center justify-between">
+        <div className="mt-4 flex items-center justify-between">
           <span className="text-sm text-[var(--text-secondary)]">{entryText.length} characters</span>
           <button
             type="button"
-            className="inline-flex items-center gap-2 rounded-lg bg-gray-600 px-4 py-2 text-sm font-semibold text-white transition hover:bg-gray-700 disabled:cursor-not-allowed disabled:opacity-50"
+            className="inline-flex items-center gap-2 rounded-2xl bg-[var(--primary)] px-5 py-2.5 text-sm font-semibold text-white transition-all duration-200 hover:bg-[var(--primary-dark)] hover:shadow-md disabled:cursor-not-allowed disabled:opacity-50"
             disabled={createMutation.isPending || entryText.trim().length === 0}
             onClick={() => createMutation.mutate({ content: entryText.trim() })}
           >
@@ -261,7 +261,7 @@ export default function JournalPage() {
         </div>
 
         <div
-          className={`mt-6 rounded-xl border border-dashed p-8 text-center ${fileHover ? "border-[var(--primary-blue)] bg-blue-50" : "border-[var(--border)] bg-[var(--surface-muted)]"}`}
+          className={`mt-6 rounded-2xl border-2 border-dashed p-8 text-center transition-all duration-200 ${fileHover ? "border-[var(--primary)] bg-[var(--primary-soft)]" : "border-[var(--border)] bg-[var(--surface-muted)]"}`}
           onDragOver={(event) => {
             event.preventDefault();
             setFileHover(true);
@@ -277,7 +277,7 @@ export default function JournalPage() {
           <p className="mt-3 text-sm text-[var(--text-secondary)]">Drag and drop a .txt file here, or</p>
           <button
             type="button"
-            className="mt-3 rounded-lg border border-[var(--border)] bg-white px-4 py-2 text-sm font-semibold hover:bg-[var(--surface-muted)]"
+            className="mt-3 rounded-2xl border border-[var(--border)] bg-white px-5 py-2 text-sm font-semibold transition-all duration-200 hover:bg-[var(--surface-muted)] hover:shadow-sm"
             onClick={() => fileInputRef.current?.click()}
           >
             Browse Files
@@ -292,12 +292,12 @@ export default function JournalPage() {
           <p className="mt-2 text-xs text-[var(--text-secondary)]">Max file size: 5MB</p>
 
           {selectedFile ? (
-            <div className="mx-auto mt-4 max-w-lg rounded-lg border border-[var(--border)] bg-white p-3 text-left text-sm">
+            <div className="mx-auto mt-4 max-w-lg rounded-2xl border border-[var(--border)] bg-white p-4 text-left text-sm">
               <div className="flex items-center justify-between gap-3">
                 <p className="truncate font-semibold">{selectedFile.name}</p>
                 <button
                   type="button"
-                  className="rounded-md bg-[var(--primary-blue)] px-3 py-1.5 text-xs font-semibold text-white"
+                  className="rounded-xl bg-[var(--primary)] px-4 py-1.5 text-xs font-semibold text-white transition-all duration-200 hover:bg-[var(--primary-dark)]"
                   onClick={() => uploadMutation.mutate(selectedFile)}
                   disabled={uploadMutation.isPending}
                 >
@@ -306,8 +306,8 @@ export default function JournalPage() {
               </div>
               <p className="mt-1 text-xs text-[var(--text-secondary)]">{Math.round(selectedFile.size / 1024)} KB</p>
               {uploadProgress > 0 ? (
-                <div className="mt-3 h-2 w-full overflow-hidden rounded-full bg-gray-100">
-                  <div className="h-full bg-[var(--primary-blue)]" style={{ width: `${uploadProgress}%` }} />
+                <div className="mt-3 h-2 w-full overflow-hidden rounded-full bg-[var(--surface-muted)]">
+                  <div className="h-full rounded-full bg-[var(--primary)] transition-all duration-300" style={{ width: `${uploadProgress}%` }} />
                 </div>
               ) : null}
             </div>
@@ -315,10 +315,10 @@ export default function JournalPage() {
         </div>
       </section>
 
-      <section className="surface-card p-4 sm:p-5">
+      <section className="surface-card p-5 sm:p-6">
         <div className="grid gap-3 md:grid-cols-[1fr_260px_240px]">
-          <div className="field relative px-3 py-2">
-            <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-[var(--text-secondary)]" />
+          <div className="field relative px-3 py-2.5">
+            <Search className="absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-[var(--text-secondary)]" />
             <input
               value={searchText}
               onChange={(event) => setSearchText(event.target.value)}
@@ -328,8 +328,8 @@ export default function JournalPage() {
             />
           </div>
 
-          <label className="field flex items-center gap-2 px-3 py-2 text-sm">
-            <Filter className="h-4 w-4 text-[var(--text-secondary)]" />
+          <label className="field flex items-center gap-2 px-3.5 py-2.5 text-sm">
+            <Filter className="h-4 w-4 shrink-0 text-[var(--text-secondary)]" />
             <select
               className="w-full bg-transparent outline-none"
               value={emotionFilter}
@@ -345,8 +345,8 @@ export default function JournalPage() {
             </select>
           </label>
 
-          <label className="field flex items-center gap-2 px-3 py-2 text-sm">
-            <ArrowDownUp className="h-4 w-4 text-[var(--text-secondary)]" />
+          <label className="field flex items-center gap-2 px-3.5 py-2.5 text-sm">
+            <ArrowDownUp className="h-4 w-4 shrink-0 text-[var(--text-secondary)]" />
             <select
               className="w-full bg-transparent outline-none"
               value={sortOrder}
@@ -361,21 +361,21 @@ export default function JournalPage() {
 
       <section className="space-y-4">
         {entriesQuery.isError ? (
-          <div className="surface-card p-4 text-sm text-red-700">{handleApiError(entriesQuery.error)}</div>
+          <div className="surface-card p-4 text-sm text-[#8a5a52]">{handleApiError(entriesQuery.error)}</div>
         ) : null}
 
         {filteredEntries.length === 0 ? (
-          <div className="surface-card p-6 text-sm text-[var(--text-secondary)]">No entries match your current filters.</div>
+          <div className="surface-card p-8 text-center text-sm text-[var(--text-secondary)]">No entries match your current filters.</div>
         ) : (
           filteredEntries.map((entry) => {
             const isExpanded = Boolean(expanded[entry.id]);
             const preview = isExpanded ? entry.content : truncateText(entry.content, 150);
             return (
-              <article key={entry.id} className="surface-card p-5">
+              <article key={entry.id} className="surface-card p-5 sm:p-6 transition-all duration-200 hover:shadow-md">
                 <div className="flex items-start justify-between gap-3">
-                  <div className="flex items-center gap-2">
+                  <div className="flex items-center gap-2.5">
                     <span
-                      className={`rounded-full px-2.5 py-1 text-xs font-semibold text-white ${
+                      className={`rounded-full px-3 py-1 text-xs font-semibold text-white ${
                         emotionStyles[entry.emotion] || emotionStyles.neutral
                       }`}
                     >
@@ -387,7 +387,7 @@ export default function JournalPage() {
                   </div>
                   <button
                     type="button"
-                    className="rounded-md p-1.5 text-red-500 hover:bg-red-50"
+                    className="rounded-xl p-2 text-[#c07068] transition-all duration-200 hover:bg-[#faf0ee]"
                     aria-label="Delete journal entry"
                     onClick={() => {
                       const confirmed = window.confirm("Delete this journal entry permanently?");
@@ -399,16 +399,16 @@ export default function JournalPage() {
                   </button>
                 </div>
 
-                <p className="mt-4 text-[15px] leading-7 text-[#1f2937]">{preview}</p>
+                <p className="mt-4 text-[15px] leading-7 text-foreground/85">{preview}</p>
 
                 {entry.content.length > 150 ? (
                   <button
                     type="button"
-                    className="mt-3 inline-flex items-center gap-1 text-sm font-semibold text-[var(--text-primary)]"
+                    className="mt-3 inline-flex items-center gap-1 text-sm font-medium text-[var(--primary)] transition-colors hover:text-[var(--primary-dark)]"
                     onClick={() => setExpanded((prev) => ({ ...prev, [entry.id]: !isExpanded }))}
                   >
                     {isExpanded ? "Show less" : "Show more"}
-                    <ChevronDown className={`h-4 w-4 transition-transform ${isExpanded ? "rotate-180" : ""}`} />
+                    <ChevronDown className={`h-4 w-4 transition-transform duration-200 ${isExpanded ? "rotate-180" : ""}`} />
                   </button>
                 ) : null}
               </article>
@@ -419,7 +419,7 @@ export default function JournalPage() {
         {entriesQuery.hasNextPage ? (
           <button
             type="button"
-            className="mx-auto block rounded-lg border border-[var(--border)] bg-white px-4 py-2 text-sm font-semibold hover:bg-[var(--surface-muted)]"
+            className="mx-auto block rounded-2xl border border-[var(--border)] bg-white px-6 py-2.5 text-sm font-semibold transition-all duration-200 hover:bg-[var(--surface-muted)] hover:shadow-sm"
             onClick={() => entriesQuery.fetchNextPage()}
             disabled={entriesQuery.isFetchingNextPage}
           >

@@ -1,23 +1,23 @@
 @import "tailwindcss";
 
 :root {
-  --primary-blue: #3b82f6;
-  --primary-dark: #1e40af;
-  --primary-soft: #dbeafe;
+  --primary: #8b7ec8;
+  --primary-dark: #6d63a8;
+  --primary-soft: #ede9f7;
 
-  --emotion-anxiety: #ef4444;
-  --emotion-sadness: #6366f1;
-  --emotion-joy: #10b981;
-  --emotion-stress: #f59e0b;
-  --emotion-calm: #8b5cf6;
+  --emotion-anxiety: #d4877f;
+  --emotion-sadness: #8a8cd8;
+  --emotion-joy: #6db89a;
+  --emotion-stress: #d4a96a;
+  --emotion-calm: #9b8ec4;
 
-  --background: #f9fafb;
+  --background: #faf8f5;
   --surface: #ffffff;
-  --surface-muted: #f3f4f6;
-  --text-primary: #111827;
-  --text-secondary: #6b7280;
-  --border: #e5e7eb;
-  --ring: #93c5fd;
+  --surface-muted: #f5f0eb;
+  --text-primary: #2d2a33;
+  --text-secondary: #7a7582;
+  --border: #e8e0d8;
+  --ring: #b8aee0;
 
   color-scheme: light;
 }
@@ -43,14 +43,16 @@ body {
 .surface-card {
   border: 1px solid var(--border);
   background: var(--surface);
-  border-radius: 14px;
-  box-shadow: 0 1px 2px rgb(17 24 39 / 0.04);
+  border-radius: 20px;
+  box-shadow: 0 2px 12px rgb(45 42 51 / 0.04);
+  transition: box-shadow 0.2s ease;
 }
 
 .field {
   border: 1px solid var(--border);
-  border-radius: 10px;
+  border-radius: 14px;
   background: var(--surface-muted);
+  transition: border-color 0.2s ease;
 }
 
 .field:focus-within {
@@ -78,6 +80,6 @@ body {
   position: absolute;
   inset: -6px;
   border-radius: 9999px;
-  border: 3px solid rgb(239 68 68 / 0.4);
+  border: 3px solid rgb(212 135 127 / 0.4);
   animation: pulse-ring 1.6s ease-out infinite;
 }

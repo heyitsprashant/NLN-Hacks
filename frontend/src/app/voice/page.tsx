@@ -18,10 +18,10 @@ type VoiceHistoryItem = {
 };
 
 function getStateClasses(state: VoiceState): string {
-  if (state === "recording") return "bg-red-500 text-white recording-pulse";
-  if (state === "processing") return "bg-amber-500 text-white";
-  if (state === "speaking") return "bg-[var(--primary-blue)] text-white";
-  return "bg-slate-400 text-white";
+  if (state === "recording") return "bg-[var(--emotion-anxiety)] text-white recording-pulse shadow-[0_0_30px_rgba(212,135,127,0.3)]";
+  if (state === "processing") return "bg-[var(--emotion-stress)] text-white shadow-[0_0_30px_rgba(212,169,106,0.3)]";
+  if (state === "speaking") return "bg-[var(--primary)] text-white shadow-[0_0_30px_rgba(139,126,200,0.3)]";
+  return "bg-[var(--primary)] text-white shadow-lg hover:shadow-xl hover:scale-105";
 }
 
 export default function VoicePage() {
@@ -257,17 +257,17 @@ export default function VoicePage() {
   }, [state]);
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-8">
       <header>
-        <h1 className="text-[2.2rem] font-bold tracking-tight">Voice Mode</h1>
-        <p className="mt-1 text-lg text-[var(--text-secondary)]">Speak naturally with your AI mental health companion</p>
+        <h1 className="text-3xl font-bold tracking-tight text-foreground">Voice Mode</h1>
+        <p className="mt-2 text-base text-[var(--text-secondary)]">Speak naturally with your AI mental health companion</p>
       </header>
 
-      <section className="surface-card p-6 text-center sm:p-10">
+      <section className="surface-card p-8 text-center sm:p-12">
         <button
           type="button"
           aria-label="Start or stop voice recording"
-          className={`relative mx-auto flex h-28 w-28 items-center justify-center rounded-full text-white shadow-lg transition ${getStateClasses(state)}`}
+          className={`relative mx-auto flex h-32 w-32 items-center justify-center rounded-full transition-all duration-300 ${getStateClasses(state)}`}
           onClick={() => {
             if (state === "recording") {
               stopRecording();
@@ -283,69 +283,69 @@ export default function VoicePage() {
           <Mic className="h-10 w-10" />
         </button>
 
-        <h2 className="mt-6 text-3xl font-semibold">{stateTitle}</h2>
+        <h2 className="mt-7 text-2xl font-semibold text-foreground">{stateTitle}</h2>
         <p className="mt-2 text-base text-[var(--text-secondary)]">
           {state === "idle" ? "Click the microphone to start speaking" : "Voice interaction is currently active"}
         </p>
 
         <button
           type="button"
-          className="mt-6 rounded-lg border border-[var(--border)] bg-white px-4 py-2 text-sm font-semibold"
+          className="mt-6 rounded-2xl border border-[var(--border)] bg-white px-5 py-2 text-sm font-semibold transition-all duration-200 hover:bg-[var(--surface-muted)] hover:shadow-sm"
           onClick={() => setIsMuted((value) => !value)}
         >
           {isMuted ? "Unmute" : "Mute"}
         </button>
 
-        <div className="mt-6 flex h-24 items-end justify-center gap-1 rounded-xl border border-[var(--border)] bg-[var(--surface-muted)] px-4 py-3">
+        <div className="mx-auto mt-6 flex h-24 max-w-md items-end justify-center gap-1 rounded-2xl border border-[var(--border)] bg-[var(--surface-muted)] px-4 py-3">
           {waveBars.map((value, index) => (
             <span
               key={`wave-${index}`}
-              className="w-2 rounded-full bg-[var(--primary-blue)]"
-              style={{ height: `${value}px` }}
+              className="w-2 rounded-full bg-[var(--primary)] transition-all duration-75"
+              style={{ height: `${value}px`, opacity: 0.4 + (value / 42) * 0.6 }}
             />
           ))}
         </div>
       </section>
 
       <div className="grid gap-6 xl:grid-cols-2">
-        <section className="surface-card p-5 sm:p-6">
-          <h3 className="text-lg font-semibold">Live Transcription</h3>
-          <p className="text-sm text-[var(--text-secondary)]">Edit transcript before sending for AI analysis</p>
+        <section className="surface-card p-6 sm:p-7">
+          <h3 className="text-lg font-semibold text-foreground">Live Transcription</h3>
+          <p className="mt-1 text-sm text-[var(--text-secondary)]">Edit transcript before sending for AI analysis</p>
           <textarea
             value={transcript}
             onChange={(event) => setTranscript(event.target.value)}
             rows={8}
-            className="field mt-4 w-full resize-y p-3 text-sm outline-none"
+            className="field mt-5 w-full resize-y p-4 text-sm leading-7 outline-none"
             placeholder="Your speech transcript appears here in real time..."
           />
         </section>
 
-        <section className="surface-card p-5 sm:p-6">
-          <h3 className="text-lg font-semibold">AI Response Player</h3>
-          <p className="text-sm text-[var(--text-secondary)]">Playback generated response with controls</p>
+        <section className="surface-card p-6 sm:p-7">
+          <h3 className="text-lg font-semibold text-foreground">AI Response Player</h3>
+          <p className="mt-1 text-sm text-[var(--text-secondary)]">Playback generated response with controls</p>
 
-          <div className="mt-4 rounded-lg border border-[var(--border)] bg-[var(--surface-muted)] p-4 text-sm leading-7">
+          <div className="mt-5 rounded-2xl border border-[var(--border)] bg-[var(--surface-muted)] p-5 text-sm leading-7 text-foreground/85">
             {processMutation.isPending ? "Processing your voice input..." : aiResponse}
           </div>
 
-          <div className="mt-4 flex flex-wrap items-center gap-2">
-            <button type="button" className="rounded-lg border border-[var(--border)] bg-white p-2" onClick={speakResponse}>
-              <Play className="h-4 w-4" />
+          <div className="mt-5 flex flex-wrap items-center gap-2">
+            <button type="button" className="rounded-xl border border-[var(--border)] bg-white p-2.5 transition-all duration-200 hover:bg-[var(--surface-muted)] hover:shadow-sm" onClick={speakResponse}>
+              <Play className="h-4 w-4 text-[var(--text-secondary)]" />
             </button>
-            <button type="button" className="rounded-lg border border-[var(--border)] bg-white p-2" onClick={pauseSpeech}>
-              <Pause className="h-4 w-4" />
+            <button type="button" className="rounded-xl border border-[var(--border)] bg-white p-2.5 transition-all duration-200 hover:bg-[var(--surface-muted)] hover:shadow-sm" onClick={pauseSpeech}>
+              <Pause className="h-4 w-4 text-[var(--text-secondary)]" />
             </button>
-            <button type="button" className="rounded-lg border border-[var(--border)] bg-white p-2" onClick={resumeSpeech}>
-              <Volume2 className="h-4 w-4" />
+            <button type="button" className="rounded-xl border border-[var(--border)] bg-white p-2.5 transition-all duration-200 hover:bg-[var(--surface-muted)] hover:shadow-sm" onClick={resumeSpeech}>
+              <Volume2 className="h-4 w-4 text-[var(--text-secondary)]" />
             </button>
-            <button type="button" className="rounded-lg border border-[var(--border)] bg-white p-2" onClick={stopSpeech}>
-              <Square className="h-4 w-4" />
+            <button type="button" className="rounded-xl border border-[var(--border)] bg-white p-2.5 transition-all duration-200 hover:bg-[var(--surface-muted)] hover:shadow-sm" onClick={stopSpeech}>
+              <Square className="h-4 w-4 text-[var(--text-secondary)]" />
             </button>
           </div>
 
-          <div className="mt-4 grid gap-3 sm:grid-cols-2">
-            <label className="space-y-1 text-sm">
-              <span className="font-semibold text-[var(--text-secondary)]">Volume</span>
+          <div className="mt-5 grid gap-4 sm:grid-cols-2">
+            <label className="space-y-1.5 text-sm">
+              <span className="font-medium text-[var(--text-secondary)]">Volume</span>
               <input
                 type="range"
                 min={0}
@@ -353,12 +353,12 @@ export default function VoicePage() {
                 step={0.1}
                 value={volume}
                 onChange={(event) => setVolume(Number(event.target.value))}
-                className="w-full"
+                className="w-full accent-[var(--primary)]"
               />
             </label>
 
-            <label className="space-y-1 text-sm">
-              <span className="font-semibold text-[var(--text-secondary)]">Speed</span>
+            <label className="space-y-1.5 text-sm">
+              <span className="font-medium text-[var(--text-secondary)]">Speed</span>
               <select
                 value={speed}
                 onChange={(event) => setSpeed(Number(event.target.value))}
@@ -373,24 +373,24 @@ export default function VoicePage() {
         </section>
       </div>
 
-      <section className="surface-card p-5 sm:p-6">
-        <h3 className="text-lg font-semibold">Conversation History</h3>
-        <p className="text-sm text-[var(--text-secondary)]">Your past voice interactions</p>
+      <section className="surface-card p-6 sm:p-7">
+        <h3 className="text-lg font-semibold text-foreground">Conversation History</h3>
+        <p className="mt-1 text-sm text-[var(--text-secondary)]">Your past voice interactions</p>
 
         {historyQuery.isError ? (
-          <p className="mt-4 rounded-lg border border-red-200 bg-red-50 p-3 text-sm text-red-700">
+          <p className="mt-4 rounded-2xl border border-[#e0c4c0] bg-[#faf0ee] p-3 text-sm text-[#8a5a52]">
             {handleApiError(historyQuery.error)}
           </p>
         ) : null}
 
         <div className="mt-5 space-y-4">
           {(historyQuery.data ?? []).map((item) => (
-            <article key={item.id} className="rounded-xl border border-[var(--border)] p-4">
-              <p className="text-xs font-semibold uppercase tracking-wide text-[var(--text-secondary)]">
+            <article key={item.id} className="rounded-2xl border border-[var(--border)] p-5 transition-all duration-200 hover:shadow-md">
+              <p className="text-xs font-medium uppercase tracking-wider text-[var(--text-secondary)]">
                 {formatRelativeTime(item.timestamp)}
               </p>
-              <p className="mt-2 text-sm"><span className="font-semibold">You:</span> {item.userText}</p>
-              <p className="mt-2 text-sm text-[var(--text-secondary)]"><span className="font-semibold text-[var(--text-primary)]">AI:</span> {item.aiText}</p>
+              <p className="mt-2.5 text-sm text-foreground"><span className="font-semibold">You:</span> {item.userText}</p>
+              <p className="mt-2 text-sm text-[var(--text-secondary)]"><span className="font-semibold text-foreground">AI:</span> {item.aiText}</p>
             </article>
           ))}
         </div>

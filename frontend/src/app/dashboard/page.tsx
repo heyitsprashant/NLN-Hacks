@@ -3,13 +3,12 @@
 import { useMemo, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import {
-  Line,
-  LineChart,
+  Area,
+  AreaChart,
   ResponsiveContainer,
   Tooltip,
   XAxis,
   YAxis,
-  CartesianGrid,
 } from "recharts";
 import { RefreshCw, TrendingUp, X, ExternalLink } from "lucide-react";
 import toast from "react-hot-toast";
@@ -47,9 +46,9 @@ const emotionColor: Record<string, string> = {
 };
 
 const severityStyles: Record<DashboardAlert["severity"], string> = {
-  low: "border-blue-200 bg-blue-50 text-blue-900",
-  medium: "border-amber-200 bg-amber-50 text-amber-900",
-  high: "border-red-200 bg-red-50 text-red-900",
+  low: "border-[#c8d7e8] bg-[#f0f4f9] text-[#4a6785]",
+  medium: "border-[#e8d8c0] bg-[#faf3ea] text-[#7a6340]",
+  high: "border-[#e0c4c0] bg-[#faf0ee] text-[#8a5a52]",
 };
 
 function fallbackMoodData(): MoodDataPoint[] {
@@ -108,7 +107,7 @@ function fallbackPatterns(): PatternInsight[] {
 }
 
 function getEmotionColor(emotion: string): string {
-  return emotionColor[emotion.toLowerCase()] ?? "var(--primary-blue)";
+  return emotionColor[emotion.toLowerCase()] ?? "var(--primary)";
 }
 
 export default function DashboardPage() {
@@ -176,33 +175,56 @@ export default function DashboardPage() {
   );
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-8">
       <header>
-        <h1 className="text-[2.2rem] font-bold tracking-tight text-foreground">Dashboard</h1>
-        <p className="mt-1 text-lg text-(--text-secondary)">Your mental health overview for the past week</p>
+        <h1 className="text-3xl font-bold tracking-tight text-foreground">Your Wellness Overview</h1>
+        <p className="mt-2 text-base text-(--text-secondary)">Here&apos;s how you&apos;ve been feeling this week</p>
       </header>
 
-      <section className="surface-card p-5 sm:p-6">
-        <h2 className="text-xl font-semibold">Mood Trends</h2>
-        <p className="text-sm text-(--text-secondary)">Your emotional patterns over the last 7 days</p>
-        <div className="mt-4 h-[300px] w-full">
+      <section className="surface-card p-6 sm:p-8">
+        <h2 className="text-lg font-semibold text-foreground">Mood Trends</h2>
+        <p className="mt-1 text-sm text-(--text-secondary)">Your emotional patterns over the last 7 days</p>
+        <div className="mt-6 h-[300px] w-full">
           <ResponsiveContainer width="100%" height="100%">
-            <LineChart data={chartData}>
-              <CartesianGrid strokeDasharray="4 4" stroke="#e5e7eb" />
-              <XAxis dataKey="dayLabel" tick={{ fill: "#6b7280" }} axisLine={{ stroke: "#cbd5e1" }} />
-              <YAxis domain={[0, 1]} tick={{ fill: "#6b7280" }} axisLine={{ stroke: "#cbd5e1" }} />
+            <AreaChart data={chartData}>
+              <defs>
+                <linearGradient id="moodGradient" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="0%" stopColor="var(--primary)" stopOpacity={0.2} />
+                  <stop offset="95%" stopColor="var(--primary)" stopOpacity={0.02} />
+                </linearGradient>
+              </defs>
+              <XAxis
+                dataKey="dayLabel"
+                tick={{ fill: "var(--text-secondary)", fontSize: 13 }}
+                axisLine={false}
+                tickLine={false}
+                dy={8}
+              />
+              <YAxis
+                domain={[0, 1]}
+                tick={{ fill: "var(--text-secondary)", fontSize: 13 }}
+                axisLine={false}
+                tickLine={false}
+                dx={-8}
+              />
               <Tooltip
-                contentStyle={{ borderRadius: 10, borderColor: "#e5e7eb" }}
-                formatter={(value: number, _name, item) => [
-                  `${value.toFixed(2)} (${item.payload.emotion})`,
+                contentStyle={{
+                  borderRadius: 16,
+                  border: "1px solid var(--border)",
+                  boxShadow: "0 4px 20px rgba(45, 42, 51, 0.08)",
+                  padding: "10px 14px",
+                }}
+                formatter={(value, _name, item) => [
+                  `${Number(value).toFixed(2)} (${item.payload.emotion})`,
                   "Mood score",
                 ]}
               />
-              <Line
+              <Area
                 type="monotone"
                 dataKey="moodScore"
-                stroke="var(--primary-blue)"
-                strokeWidth={3}
+                stroke="var(--primary)"
+                strokeWidth={2.5}
+                fill="url(#moodGradient)"
                 dot={(props) => (
                   <circle
                     cx={props.cx}
@@ -210,39 +232,39 @@ export default function DashboardPage() {
                     r={5}
                     fill={getEmotionColor(props.payload.emotion)}
                     stroke="#ffffff"
-                    strokeWidth={2}
+                    strokeWidth={2.5}
                   />
                 )}
-                activeDot={{ r: 6 }}
+                activeDot={{ r: 7, strokeWidth: 3, stroke: "#ffffff" }}
               />
-            </LineChart>
+            </AreaChart>
           </ResponsiveContainer>
         </div>
       </section>
 
       <div className="grid gap-6 lg:grid-cols-2">
-        <section className="surface-card p-5 sm:p-6">
+        <section className="surface-card p-6 sm:p-7">
           <div className="flex items-start justify-between gap-3">
             <div>
-              <h2 className="text-xl font-semibold">AI Insights</h2>
-              <p className="text-sm text-(--text-secondary)">Weekly mental health summary</p>
+              <h2 className="text-lg font-semibold text-foreground">Weekly Reflections</h2>
+              <p className="mt-1 text-sm text-(--text-secondary)">AI-generated mental health summary</p>
             </div>
             <button
               type="button"
               aria-label="Regenerate weekly summary"
-              className="rounded-lg border border-(--border) p-2 text-(--text-secondary) hover:bg-(--surface-muted)"
+              className="rounded-xl border border-(--border) p-2.5 text-(--text-secondary) transition-all duration-200 hover:bg-(--surface-muted) hover:shadow-sm"
               onClick={() => summaryQuery.refetch()}
             >
               <RefreshCw className={`h-4 w-4 ${summaryQuery.isFetching ? "animate-spin" : ""}`} />
             </button>
           </div>
 
-          <div className="mt-5 min-h-[130px] text-[15px] leading-7 text-[#1f2937]">
+          <div className="mt-5 min-h-[130px] text-[15px] leading-7 text-foreground/85">
             {summaryQuery.isLoading ? (
-              <div className="space-y-2">
-                <div className="h-4 w-full animate-pulse rounded bg-gray-100" />
-                <div className="h-4 w-[86%] animate-pulse rounded bg-gray-100" />
-                <div className="h-4 w-[78%] animate-pulse rounded bg-gray-100" />
+              <div className="space-y-3">
+                <div className="h-4 w-full animate-pulse rounded-lg bg-(--surface-muted)" />
+                <div className="h-4 w-[86%] animate-pulse rounded-lg bg-(--surface-muted)" />
+                <div className="h-4 w-[78%] animate-pulse rounded-lg bg-(--surface-muted)" />
               </div>
             ) : (
               summaryQuery.data?.summary ||
@@ -255,28 +277,28 @@ export default function DashboardPage() {
           </p>
         </section>
 
-        <section className="surface-card p-5 sm:p-6">
-          <h2 className="text-xl font-semibold">Active Alerts</h2>
-          <p className="text-sm text-(--text-secondary)">Patterns that need your attention</p>
+        <section className="surface-card p-6 sm:p-7">
+          <h2 className="text-lg font-semibold text-foreground">Gentle Reminders</h2>
+          <p className="mt-1 text-sm text-(--text-secondary)">Patterns worth being mindful of</p>
 
           {alertsQuery.isError ? (
-            <p className="mt-4 rounded-lg border border-red-200 bg-red-50 p-3 text-sm text-red-700">
+            <p className="mt-4 rounded-2xl border border-[#e0c4c0] bg-[#faf0ee] p-3 text-sm text-[#8a5a52]">
               {handleApiError(alertsQuery.error)}
             </p>
           ) : null}
 
-          <div className="mt-4 space-y-3">
+          <div className="mt-5 space-y-3">
             {visibleAlerts.length === 0 ? (
-              <div className="rounded-xl border border-dashed border-(--border) bg-(--surface-muted) p-6 text-sm text-(--text-secondary)">
-                No active alerts right now. Keep journaling to maintain pattern accuracy.
+              <div className="rounded-2xl border border-dashed border-(--border) bg-(--surface-muted) p-6 text-center text-sm text-(--text-secondary)">
+                No active reminders right now. Keep journaling to stay in tune with yourself.
               </div>
             ) : (
               visibleAlerts.map((alert) => (
-                <article key={alert.id} className={`relative rounded-xl border p-4 ${severityStyles[alert.severity]}`}>
+                <article key={alert.id} className={`relative rounded-2xl border p-4 transition-all duration-200 ${severityStyles[alert.severity]}`}>
                   <button
                     type="button"
                     aria-label={`Dismiss ${alert.type}`}
-                    className="absolute right-3 top-3 rounded p-1 hover:bg-black/5"
+                    className="absolute right-3 top-3 rounded-lg p-1 transition-colors hover:bg-black/5"
                     onClick={() => {
                       setDismissedAlerts((prev) => [...prev, alert.id]);
                       toast.success("Alert dismissed");
@@ -286,12 +308,12 @@ export default function DashboardPage() {
                   </button>
                   <div className="flex items-center gap-2">
                     <h3 className="text-base font-semibold">{alert.type}</h3>
-                    <span className="rounded-full border border-black/10 bg-white/70 px-2 py-0.5 text-xs font-semibold capitalize">
+                    <span className="rounded-full border border-black/8 bg-white/60 px-2.5 py-0.5 text-xs font-medium capitalize">
                       {alert.severity}
                     </span>
                   </div>
-                  <p className="mt-2 max-w-[280px] text-sm leading-6">{alert.message}</p>
-                  <p className="mt-2 text-xs opacity-80">{formatRelativeTime(alert.timestamp)}</p>
+                  <p className="mt-2 max-w-[320px] text-sm leading-6">{alert.message}</p>
+                  <p className="mt-2 text-xs opacity-70">{formatRelativeTime(alert.timestamp)}</p>
                 </article>
               ))
             )}
@@ -299,38 +321,38 @@ export default function DashboardPage() {
         </section>
       </div>
 
-      <section className="surface-card p-5 sm:p-6">
-        <div className="flex items-center gap-2">
-          <TrendingUp className="h-5 w-5 text-(--primary-blue)" />
-          <h2 className="text-xl font-semibold">Pattern Insights</h2>
+      <section className="surface-card p-6 sm:p-7">
+        <div className="flex items-center gap-2.5">
+          <TrendingUp className="h-5 w-5 text-[var(--primary)]" />
+          <h2 className="text-lg font-semibold text-foreground">Pattern Insights</h2>
         </div>
         <p className="mt-1 text-sm text-(--text-secondary)">Behavioral patterns detected from your entries</p>
 
         {patternsQuery.isError ? (
-          <p className="mt-4 rounded-lg border border-red-200 bg-red-50 p-3 text-sm text-red-700">
+          <p className="mt-4 rounded-2xl border border-[#e0c4c0] bg-[#faf0ee] p-3 text-sm text-[#8a5a52]">
             {handleApiError(patternsQuery.error)}
           </p>
         ) : null}
 
-        <div className="mt-5 grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+        <div className="mt-6 grid gap-4 md:grid-cols-2 xl:grid-cols-3">
           {(patternsQuery.data?.length ? patternsQuery.data : fallbackPatterns()).map((pattern) => (
-            <article key={pattern.id} className="rounded-xl border border-(--border) p-4">
-              <h3 className="text-lg font-semibold leading-6">{pattern.description}</h3>
+            <article key={pattern.id} className="rounded-2xl border border-(--border) bg-(--surface) p-5 transition-all duration-200 hover:shadow-md">
+              <h3 className="text-base font-semibold leading-6 text-foreground">{pattern.description}</h3>
               <div className="mt-4 flex items-center justify-between text-sm text-(--text-secondary)">
                 <span>
                   Confidence:
-                  <span className="ml-2 rounded-full bg-(--surface-muted) px-2 py-0.5 font-semibold text-foreground">
+                  <span className="ml-2 rounded-full bg-[var(--primary-soft)] px-2.5 py-0.5 text-xs font-semibold text-[var(--primary-dark)]">
                     {Math.round(pattern.confidenceScore * 100)}%
                   </span>
                 </span>
-                <span>{pattern.entriesCount} entries</span>
+                <span className="text-xs">{pattern.entriesCount} entries</span>
               </div>
               <button
                 type="button"
-                className="mt-4 inline-flex items-center gap-2 text-sm font-semibold text-foreground hover:text-(--primary-dark)"
+                className="mt-4 inline-flex items-center gap-2 text-sm font-medium text-[var(--primary)] transition-colors hover:text-[var(--primary-dark)]"
               >
                 Learn more
-                <ExternalLink className="h-4 w-4" />
+                <ExternalLink className="h-3.5 w-3.5" />
               </button>
             </article>
           ))}
@@ -339,4 +361,3 @@ export default function DashboardPage() {
     </div>
   );
 }
-

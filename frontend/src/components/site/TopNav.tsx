@@ -15,18 +15,18 @@ export default function TopNav() {
       <div className="mx-auto flex max-w-6xl items-center justify-between px-4 py-3">
         <Link
           href="/dashboard"
-          className="text-lg font-semibold text-foreground"
+          className="text-lg font-semibold text-[var(--primary)]"
           aria-label="Go to dashboard"
         >
-          nepHacks
+          MindCare
         </Link>
 
-        <nav className="flex items-center gap-2 overflow-x-auto">
+        <nav className="flex items-center gap-1 overflow-x-auto">
           {links.map((l) => (
             <Link
               key={l.href}
               href={l.href}
-              className="rounded-md px-2 py-1 text-sm text-(--text-secondary) hover:text-foreground focus:outline-none focus-visible:ring-2 focus-visible:ring-(--primary-blue)"
+              className="rounded-xl px-3 py-1.5 text-sm text-(--text-secondary) transition-all duration-200 hover:bg-(--surface-muted) hover:text-foreground focus:outline-none focus-visible:ring-2 focus-visible:ring-(--ring)"
             >
               {l.label}
             </Link>
@@ -36,5 +36,3 @@ export default function TopNav() {
     </header>
   );
 }
-
-

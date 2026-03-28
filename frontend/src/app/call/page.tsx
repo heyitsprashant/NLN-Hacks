@@ -24,10 +24,10 @@ function formatDuration(seconds: number): string {
 }
 
 const emotionBadgeStyles: Record<string, string> = {
-  anxiety: "bg-red-100 text-red-700",
-  calm: "bg-violet-100 text-violet-700",
-  stress: "bg-amber-100 text-amber-800",
-  joy: "bg-emerald-100 text-emerald-700",
+  anxiety: "bg-[#f5e8e6] text-[#8a5a52]",
+  calm: "bg-[var(--primary-soft)] text-[var(--primary-dark)]",
+  stress: "bg-[#faf3ea] text-[#7a6340]",
+  joy: "bg-[#e8f5ee] text-[#3d7a5a]",
 };
 
 export default function CallPage() {
@@ -73,24 +73,24 @@ export default function CallPage() {
   }, [phoneQuery.data]);
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-8">
       <header>
-        <h1 className="text-[2.2rem] font-bold tracking-tight">Call Support</h1>
-        <p className="mt-1 text-lg text-(--text-secondary)">Speak directly with your AI companion via phone</p>
+        <h1 className="text-3xl font-bold tracking-tight text-foreground">Call Support</h1>
+        <p className="mt-2 text-base text-(--text-secondary)">Speak directly with your AI companion via phone</p>
       </header>
 
-      <section className="surface-card border-blue-200 bg-blue-50 p-6 text-center sm:p-10">
-        <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-(--primary-blue) text-white">
+      <section className="surface-card border-[var(--primary-soft)] bg-gradient-to-b from-[var(--primary-soft)] to-white p-8 text-center sm:p-12">
+        <div className="mx-auto flex h-18 w-18 items-center justify-center rounded-full bg-[var(--primary)] text-white shadow-lg shadow-[rgba(139,126,200,0.25)]">
           <Phone className="h-8 w-8" />
         </div>
-        <h2 className="mt-6 text-4xl font-bold">24/7 Support Line</h2>
-        <p className="mt-2 text-lg text-(--text-secondary)">Call anytime to speak with your AI companion</p>
+        <h2 className="mt-7 text-3xl font-bold text-foreground">24/7 Support Line</h2>
+        <p className="mt-2 text-base text-(--text-secondary)">Call anytime to speak with your AI companion</p>
 
-        <div className="mx-auto mt-6 flex max-w-md items-center justify-center gap-3 rounded-xl border border-(--border) bg-white px-5 py-4 shadow-sm">
-          <p className="text-4xl font-bold tracking-tight text-(--primary-blue)">{phoneNumber}</p>
+        <div className="mx-auto mt-7 flex max-w-md items-center justify-center gap-3 rounded-2xl border border-(--border) bg-white px-6 py-5 shadow-sm">
+          <p className="text-3xl font-bold tracking-tight text-[var(--primary)]">{phoneNumber}</p>
           <button
             type="button"
-            className="rounded-lg border border-(--border) bg-white px-3 py-2 text-sm font-semibold hover:bg-(--surface-muted)"
+            className="rounded-xl border border-(--border) bg-white px-4 py-2.5 text-sm font-semibold transition-all duration-200 hover:bg-(--surface-muted) hover:shadow-sm"
             onClick={async () => {
               try {
                 await navigator.clipboard.writeText(phoneNumber);
@@ -105,57 +105,57 @@ export default function CallPage() {
           </button>
         </div>
 
-        <div className="mt-5 inline-flex items-center gap-2 rounded-full bg-emerald-100 px-4 py-2 text-sm font-semibold text-emerald-800">
-          <span className="h-2.5 w-2.5 rounded-full bg-emerald-500" /> Available Now
+        <div className="mt-6 inline-flex items-center gap-2 rounded-full bg-[#e8f5ee] px-4 py-2 text-sm font-semibold text-[#3d7a5a]">
+          <span className="h-2.5 w-2.5 rounded-full bg-[#6db89a]" /> Available Now
         </div>
       </section>
 
-      <section className="surface-card p-5 sm:p-6">
-        <h2 className="text-2xl font-semibold">How It Works</h2>
-        <p className="text-(--text-secondary)">What to expect when you call</p>
-        <ol className="mt-5 space-y-4">
-          <li className="flex gap-3">
-            <span className="mt-0.5 inline-flex h-7 w-7 items-center justify-center rounded-full bg-(--primary-blue) text-sm font-bold text-white">1</span>
+      <section className="surface-card p-6 sm:p-7">
+        <h2 className="text-xl font-semibold text-foreground">How It Works</h2>
+        <p className="mt-1 text-(--text-secondary)">What to expect when you call</p>
+        <ol className="mt-6 space-y-5">
+          <li className="flex gap-4">
+            <span className="mt-0.5 inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-[var(--primary-soft)] text-sm font-bold text-[var(--primary-dark)]">1</span>
             <div>
-              <p className="text-lg font-semibold">Dial the Number</p>
-              <p className="text-(--text-secondary)">Call the support line using your phone</p>
+              <p className="text-base font-semibold text-foreground">Dial the Number</p>
+              <p className="mt-0.5 text-sm text-(--text-secondary)">Call the support line using your phone</p>
             </div>
           </li>
-          <li className="flex gap-3">
-            <span className="mt-0.5 inline-flex h-7 w-7 items-center justify-center rounded-full bg-(--primary-blue) text-sm font-bold text-white">2</span>
+          <li className="flex gap-4">
+            <span className="mt-0.5 inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-[var(--primary-soft)] text-sm font-bold text-[var(--primary-dark)]">2</span>
             <div>
-              <p className="text-lg font-semibold">Share Your Thoughts</p>
-              <p className="text-(--text-secondary)">Speak naturally about how you are feeling or what is on your mind</p>
+              <p className="text-base font-semibold text-foreground">Share Your Thoughts</p>
+              <p className="mt-0.5 text-sm text-(--text-secondary)">Speak naturally about how you are feeling or what is on your mind</p>
             </div>
           </li>
-          <li className="flex gap-3">
-            <span className="mt-0.5 inline-flex h-7 w-7 items-center justify-center rounded-full bg-(--primary-blue) text-sm font-bold text-white">3</span>
+          <li className="flex gap-4">
+            <span className="mt-0.5 inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-[var(--primary-soft)] text-sm font-bold text-[var(--primary-dark)]">3</span>
             <div>
-              <p className="text-lg font-semibold">Receive Support</p>
-              <p className="text-(--text-secondary)">Your AI companion listens and suggests coping strategies</p>
+              <p className="text-base font-semibold text-foreground">Receive Support</p>
+              <p className="mt-0.5 text-sm text-(--text-secondary)">Your AI companion listens and suggests coping strategies</p>
             </div>
           </li>
-          <li className="flex gap-3">
-            <span className="mt-0.5 inline-flex h-7 w-7 items-center justify-center rounded-full bg-(--primary-blue) text-sm font-bold text-white">4</span>
+          <li className="flex gap-4">
+            <span className="mt-0.5 inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-[var(--primary-soft)] text-sm font-bold text-[var(--primary-dark)]">4</span>
             <div>
-              <p className="text-lg font-semibold">Review Transcript</p>
-              <p className="text-(--text-secondary)">Find transcript and insights in your call history below</p>
+              <p className="text-base font-semibold text-foreground">Review Transcript</p>
+              <p className="mt-0.5 text-sm text-(--text-secondary)">Find transcript and insights in your call history below</p>
             </div>
           </li>
         </ol>
 
-        <div className="mt-5 rounded-lg border border-blue-200 bg-blue-50 px-4 py-3 text-sm">
+        <div className="mt-6 rounded-2xl border border-[var(--primary-soft)] bg-gradient-to-r from-[var(--primary-soft)]/50 to-transparent px-5 py-4 text-sm text-foreground/80">
           <p><span className="font-semibold">Average call duration:</span> 10-15 minutes</p>
-          <p><span className="font-semibold">Privacy:</span> All calls are encrypted and confidential</p>
+          <p className="mt-1"><span className="font-semibold">Privacy:</span> All calls are encrypted and confidential</p>
         </div>
       </section>
 
-      <section className="surface-card p-5 sm:p-6">
-        <h2 className="text-2xl font-semibold">Call History</h2>
-        <p className="text-(--text-secondary)">Your previous phone conversations</p>
+      <section className="surface-card p-6 sm:p-7">
+        <h2 className="text-xl font-semibold text-foreground">Call History</h2>
+        <p className="mt-1 text-(--text-secondary)">Your previous phone conversations</p>
 
         {historyQuery.isError ? (
-          <p className="mt-4 rounded-lg border border-red-200 bg-red-50 p-3 text-sm text-red-700">
+          <p className="mt-4 rounded-2xl border border-[#e0c4c0] bg-[#faf0ee] p-3 text-sm text-[#8a5a52]">
             {handleApiError(historyQuery.error)}
           </p>
         ) : null}
@@ -163,31 +163,31 @@ export default function CallPage() {
         <div className="mt-5 space-y-3">
           {(historyQuery.data ?? []).map((call) => {
             const isExpanded = Boolean(expanded[call.id]);
-            const badgeClass = emotionBadgeStyles[call.emotion.toLowerCase()] || "bg-slate-100 text-slate-700";
+            const badgeClass = emotionBadgeStyles[call.emotion.toLowerCase()] || "bg-[var(--surface-muted)] text-[var(--text-secondary)]";
 
             return (
-              <article key={call.id} className="rounded-xl border border-(--border) p-4">
+              <article key={call.id} className="rounded-2xl border border-(--border) p-5 transition-all duration-200 hover:shadow-md">
                 <div className="flex items-start justify-between gap-3">
                   <div>
-                    <p className="text-lg font-semibold" title={formatReadableDate(call.timestamp)}>{formatRelativeTime(call.timestamp)}</p>
-                    <p className="text-sm text-(--text-secondary)">Duration: {formatDuration(call.durationSeconds)}</p>
+                    <p className="text-base font-semibold text-foreground" title={formatReadableDate(call.timestamp)}>{formatRelativeTime(call.timestamp)}</p>
+                    <p className="mt-0.5 text-sm text-(--text-secondary)">Duration: {formatDuration(call.durationSeconds)}</p>
                   </div>
-                  <span className={`rounded-full px-2.5 py-1 text-xs font-semibold capitalize ${badgeClass}`}>
+                  <span className={`rounded-full px-3 py-1 text-xs font-semibold capitalize ${badgeClass}`}>
                     {call.emotion}
                   </span>
                 </div>
 
                 <button
                   type="button"
-                  className="mt-3 inline-flex items-center gap-1 text-sm font-semibold text-foreground"
+                  className="mt-3 inline-flex items-center gap-1.5 text-sm font-medium text-[var(--primary)] transition-colors hover:text-[var(--primary-dark)]"
                   onClick={() => setExpanded((prev) => ({ ...prev, [call.id]: !isExpanded }))}
                 >
                   {isExpanded ? "Hide transcript" : "View transcript"}
-                  <ChevronDown className={`h-4 w-4 transition-transform ${isExpanded ? "rotate-180" : ""}`} />
+                  <ChevronDown className={`h-4 w-4 transition-transform duration-200 ${isExpanded ? "rotate-180" : ""}`} />
                 </button>
 
                 {isExpanded ? (
-                  <p className="mt-3 rounded-lg border border-(--border) bg-(--surface-muted) p-3 text-sm text-[#374151]">
+                  <p className="mt-3 rounded-xl border border-(--border) bg-(--surface-muted) p-4 text-sm leading-7 text-foreground/80">
                     {call.transcript || "Transcript unavailable for this call."}
                   </p>
                 ) : null}
@@ -199,4 +199,3 @@ export default function CallPage() {
     </div>
   );
 }
-

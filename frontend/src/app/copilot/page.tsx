@@ -181,19 +181,19 @@ export default function CopilotPage() {
   };
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-8">
       <header>
-        <h1 className="text-[2.2rem] font-bold tracking-tight">AI Copilot</h1>
-        <p className="mt-1 text-lg text-[var(--text-secondary)]">Your mental health companion is here to support you</p>
+        <h1 className="text-3xl font-bold tracking-tight text-foreground">AI Copilot</h1>
+        <p className="mt-2 text-base text-[var(--text-secondary)]">Your mental health companion is here to support you</p>
       </header>
 
       <div className="grid gap-6 xl:grid-cols-[1fr_320px]">
-        <section className="surface-card flex h-[calc(100vh-220px)] min-h-[560px] flex-col p-4 sm:p-5">
+        <section className="surface-card flex h-[calc(100vh-220px)] min-h-[560px] flex-col p-5 sm:p-6">
           <div ref={scrollRef} className="flex-1 space-y-4 overflow-y-auto pr-1">
             {historyQuery.isLoading && messages.length === 0 ? (
-              <div className="space-y-2">
-                <div className="h-16 w-2/3 animate-pulse rounded-xl bg-gray-100" />
-                <div className="ml-auto h-14 w-2/3 animate-pulse rounded-xl bg-blue-100" />
+              <div className="space-y-3">
+                <div className="h-16 w-2/3 animate-pulse rounded-2xl bg-[var(--surface-muted)]" />
+                <div className="ml-auto h-14 w-2/3 animate-pulse rounded-2xl bg-[var(--primary-soft)]" />
               </div>
             ) : null}
 
@@ -202,14 +202,14 @@ export default function CopilotPage() {
               return (
                 <div key={message.id} className={`flex ${isUser ? "justify-end" : "justify-start"}`}>
                   <article
-                    className={`max-w-[85%] rounded-2xl px-4 py-3 shadow-sm ${
+                    className={`max-w-[85%] rounded-2xl px-5 py-3.5 shadow-sm transition-all duration-200 ${
                       isUser
-                        ? "rounded-tr-sm bg-[var(--primary-blue)] text-white"
-                        : "rounded-tl-sm border border-[var(--border)] bg-white text-[var(--text-primary)]"
+                        ? "rounded-tr-md bg-[var(--primary)] text-white"
+                        : "rounded-tl-md border border-[var(--border)] bg-white text-[var(--text-primary)]"
                     }`}
                   >
                     <p className="whitespace-pre-wrap text-[15px] leading-7">{message.content}</p>
-                    <p className={`mt-2 text-xs ${isUser ? "text-blue-100" : "text-[var(--text-secondary)]"}`}>
+                    <p className={`mt-2 text-xs ${isUser ? "text-white/60" : "text-[var(--text-secondary)]"}`}>
                       {formatRelativeTime(message.timestamp)}
                     </p>
                   </article>
@@ -219,21 +219,25 @@ export default function CopilotPage() {
 
             {typing ? (
               <div className="flex justify-start">
-                <div className="rounded-2xl rounded-tl-sm border border-[var(--border)] bg-white px-4 py-3 text-sm text-[var(--text-secondary)]">
-                  AI is typing...
+                <div className="rounded-2xl rounded-tl-md border border-[var(--border)] bg-white px-5 py-3.5 text-sm text-[var(--text-secondary)]">
+                  <span className="inline-flex items-center gap-1">
+                    <span className="inline-block h-1.5 w-1.5 animate-bounce rounded-full bg-[var(--primary)]" style={{ animationDelay: "0ms" }} />
+                    <span className="inline-block h-1.5 w-1.5 animate-bounce rounded-full bg-[var(--primary)]" style={{ animationDelay: "150ms" }} />
+                    <span className="inline-block h-1.5 w-1.5 animate-bounce rounded-full bg-[var(--primary)]" style={{ animationDelay: "300ms" }} />
+                  </span>
                 </div>
               </div>
             ) : null}
           </div>
 
-          <div className="mt-4 rounded-xl border border-[var(--border)] bg-white p-3">
-            <div className="field flex items-center gap-2 px-2 py-2">
+          <div className="mt-4 rounded-2xl border border-[var(--border)] bg-white p-3">
+            <div className="field flex items-center gap-2 px-3 py-2">
               <textarea
                 value={input}
                 onChange={(event) => setInput(event.target.value)}
                 rows={1}
                 placeholder="Type your message..."
-                className="w-full resize-none bg-transparent px-2 py-1 text-sm outline-none"
+                className="w-full resize-none bg-transparent px-1 py-1 text-sm outline-none"
                 onKeyDown={(event) => {
                   if (event.key === "Enter" && !event.shiftKey) {
                     event.preventDefault();
@@ -245,7 +249,7 @@ export default function CopilotPage() {
               />
               <button
                 type="button"
-                className="inline-flex items-center gap-2 rounded-lg bg-gray-600 px-4 py-2 text-sm font-semibold text-white transition hover:bg-gray-700 disabled:opacity-50"
+                className="inline-flex items-center gap-2 rounded-xl bg-[var(--primary)] px-4 py-2 text-sm font-semibold text-white transition-all duration-200 hover:bg-[var(--primary-dark)] hover:shadow-md disabled:opacity-50"
                 onClick={() => void sendMessage()}
                 disabled={sendMutation.isPending || isRateLimited || input.trim().length === 0}
               >
@@ -253,28 +257,28 @@ export default function CopilotPage() {
                 Send
               </button>
             </div>
-            <p className="mt-2 text-xs text-[var(--text-secondary)]">
+            <p className="mt-2 px-1 text-xs text-[var(--text-secondary)]">
               Press Enter to send, Shift+Enter for new line.
               {isRateLimited && rateLimitedUntil ? ` Try again in ${rateLimitSeconds}s.` : ""}
             </p>
           </div>
         </section>
 
-        <aside className="surface-card hidden h-[calc(100vh-220px)] min-h-[560px] overflow-y-auto p-5 xl:block">
-          <h2 className="text-lg font-semibold">Conversation Insights</h2>
+        <aside className="surface-card hidden h-[calc(100vh-220px)] min-h-[560px] overflow-y-auto p-6 xl:block">
+          <h2 className="text-lg font-semibold text-foreground">Conversation Insights</h2>
           <p className="mt-1 text-sm text-[var(--text-secondary)]">Contextual support while you chat</p>
 
           {contextQuery.isError ? (
-            <p className="mt-4 rounded-lg border border-red-200 bg-red-50 p-3 text-sm text-red-700">
+            <p className="mt-4 rounded-2xl border border-[#e0c4c0] bg-[#faf0ee] p-3 text-sm text-[#8a5a52]">
               {handleApiError(contextQuery.error)}
             </p>
           ) : null}
 
-          <section className="mt-5">
-            <h3 className="text-sm font-semibold uppercase tracking-wide text-[var(--text-secondary)]">Patterns</h3>
-            <ul className="mt-2 space-y-2 text-sm">
+          <section className="mt-6">
+            <h3 className="text-xs font-semibold uppercase tracking-wider text-[var(--text-secondary)]">Patterns</h3>
+            <ul className="mt-2.5 space-y-2 text-sm">
               {(contextQuery.data?.patterns ?? []).map((pattern) => (
-                <li key={pattern} className="rounded-lg border border-[var(--border)] bg-[var(--surface-muted)] px-3 py-2">
+                <li key={pattern} className="rounded-xl border border-[var(--border)] bg-[var(--surface-muted)] px-3.5 py-2.5 text-foreground/80">
                   {pattern}
                 </li>
               ))}
@@ -282,22 +286,25 @@ export default function CopilotPage() {
           </section>
 
           <section className="mt-6">
-            <h3 className="text-sm font-semibold uppercase tracking-wide text-[var(--text-secondary)]">Recent Entries</h3>
-            <ul className="mt-2 space-y-2 text-sm">
+            <h3 className="text-xs font-semibold uppercase tracking-wider text-[var(--text-secondary)]">Recent Entries</h3>
+            <ul className="mt-2.5 space-y-2 text-sm">
               {(contextQuery.data?.recentEntries ?? []).map((entry) => (
-                <li key={entry.id} className="rounded-lg border border-[var(--border)] px-3 py-2">
-                  <p className="line-clamp-2">{entry.content}</p>
-                  <p className="mt-1 text-xs capitalize text-[var(--text-secondary)]">{entry.emotion}</p>
+                <li key={entry.id} className="rounded-xl border border-[var(--border)] px-3.5 py-2.5">
+                  <p className="line-clamp-2 text-foreground/80">{entry.content}</p>
+                  <p className="mt-1.5 text-xs capitalize text-[var(--text-secondary)]">{entry.emotion}</p>
                 </li>
               ))}
             </ul>
           </section>
 
           <section className="mt-6">
-            <h3 className="text-sm font-semibold uppercase tracking-wide text-[var(--text-secondary)]">Tips</h3>
-            <ul className="mt-2 list-disc space-y-1 pl-5 text-sm text-[var(--text-secondary)]">
+            <h3 className="text-xs font-semibold uppercase tracking-wider text-[var(--text-secondary)]">Tips</h3>
+            <ul className="mt-2.5 space-y-2 text-sm">
               {(contextQuery.data?.tips ?? []).map((tip) => (
-                <li key={tip}>{tip}</li>
+                <li key={tip} className="flex items-start gap-2 text-[var(--text-secondary)]">
+                  <span className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-[var(--primary)]" />
+                  {tip}
+                </li>
               ))}
             </ul>
           </section>

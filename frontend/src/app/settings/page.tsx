@@ -196,72 +196,72 @@ export default function SettingsPage() {
   };
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-8">
       <header>
-        <h1 className="text-[2.2rem] font-bold tracking-tight">Settings</h1>
-        <p className="mt-1 text-lg text-[var(--text-secondary)]">Manage your preferences and privacy</p>
+        <h1 className="text-3xl font-bold tracking-tight text-foreground">Settings</h1>
+        <p className="mt-2 text-base text-[var(--text-secondary)]">Manage your preferences and privacy</p>
       </header>
 
       {settingsQuery.isError ? (
-        <p className="surface-card p-3 text-sm text-red-700">{handleApiError(settingsQuery.error)}</p>
+        <p className="surface-card p-4 text-sm text-[#8a5a52]">{handleApiError(settingsQuery.error)}</p>
       ) : null}
 
-      <section className="surface-card p-5 sm:p-6">
-        <h2 className="text-xl font-semibold">Profile Settings</h2>
-        <p className="text-[var(--text-secondary)]">Your account information</p>
+      <section className="surface-card p-6 sm:p-7">
+        <h2 className="text-lg font-semibold text-foreground">Profile Settings</h2>
+        <p className="mt-1 text-sm text-[var(--text-secondary)]">Your account information</p>
 
-        <div className="mt-5 grid gap-4 md:grid-cols-2">
-          <label className="space-y-1">
-            <span className="text-sm font-semibold">Email Address</span>
+        <div className="mt-6 grid gap-4 md:grid-cols-2">
+          <label className="space-y-1.5">
+            <span className="text-sm font-medium text-foreground">Email Address</span>
             <input
               value={profileEmail}
               onChange={(event) => setProfileEmail(event.target.value)}
-              className="field w-full px-3 py-2 text-sm outline-none"
+              className="field w-full px-3.5 py-2.5 text-sm outline-none"
               type="email"
             />
           </label>
 
-          <label className="space-y-1">
-            <span className="text-sm font-semibold">Timezone</span>
+          <label className="space-y-1.5">
+            <span className="text-sm font-medium text-foreground">Timezone</span>
             <input
               value={timezone}
               onChange={(event) => setTimezone(event.target.value)}
-              className="field w-full px-3 py-2 text-sm outline-none"
+              className="field w-full px-3.5 py-2.5 text-sm outline-none"
             />
           </label>
         </div>
 
         <div className="mt-5 grid gap-3 md:grid-cols-2">
-          <label className="flex items-center justify-between rounded-lg border border-[var(--border)] px-3 py-2 text-sm">
+          <label className="flex cursor-pointer items-center justify-between rounded-2xl border border-[var(--border)] px-4 py-3 text-sm transition-all duration-200 hover:bg-[var(--surface-muted)]">
             <span>Email Notifications</span>
-            <input type="checkbox" checked={emailNotifications} onChange={(event) => setEmailNotifications(event.target.checked)} />
+            <input type="checkbox" className="h-4 w-4 accent-[var(--primary)]" checked={emailNotifications} onChange={(event) => setEmailNotifications(event.target.checked)} />
           </label>
-          <label className="flex items-center justify-between rounded-lg border border-[var(--border)] px-3 py-2 text-sm">
+          <label className="flex cursor-pointer items-center justify-between rounded-2xl border border-[var(--border)] px-4 py-3 text-sm transition-all duration-200 hover:bg-[var(--surface-muted)]">
             <span>Push Notifications</span>
-            <input type="checkbox" checked={pushNotifications} onChange={(event) => setPushNotifications(event.target.checked)} />
+            <input type="checkbox" className="h-4 w-4 accent-[var(--primary)]" checked={pushNotifications} onChange={(event) => setPushNotifications(event.target.checked)} />
           </label>
         </div>
 
-        <button type="button" className="mt-5 rounded-lg bg-[var(--primary-blue)] px-4 py-2 text-sm font-semibold text-white" onClick={savePrivacyAndProfile}>
+        <button type="button" className="mt-6 rounded-2xl bg-[var(--primary)] px-5 py-2.5 text-sm font-semibold text-white transition-all duration-200 hover:bg-[var(--primary-dark)] hover:shadow-md" onClick={savePrivacyAndProfile}>
           Save Profile
         </button>
       </section>
 
-      <section className="surface-card p-5 sm:p-6">
-        <h2 className="text-xl font-semibold">Trusted Contacts</h2>
-        <p className="text-[var(--text-secondary)]">Emergency contacts notified when concerning patterns are detected (max 4)</p>
+      <section className="surface-card p-6 sm:p-7">
+        <h2 className="text-lg font-semibold text-foreground">Trusted Contacts</h2>
+        <p className="mt-1 text-sm text-[var(--text-secondary)]">People notified when concerning patterns are detected (max 4)</p>
 
-        <div className="mt-5 flex flex-wrap items-center gap-2">
+        <div className="mt-6 flex flex-wrap items-center gap-2">
           <input
             value={emailInput}
             onChange={(event) => setEmailInput(event.target.value)}
             placeholder="email@example.com"
-            className="field min-w-[220px] flex-1 px-3 py-2 text-sm outline-none"
+            className="field min-w-[220px] flex-1 px-3.5 py-2.5 text-sm outline-none"
             type="email"
           />
           <button
             type="button"
-            className="inline-flex items-center gap-1 rounded-lg bg-gray-600 px-3 py-2 text-sm font-semibold text-white disabled:opacity-50"
+            className="inline-flex items-center gap-1.5 rounded-2xl bg-[var(--primary)] px-4 py-2.5 text-sm font-semibold text-white transition-all duration-200 hover:bg-[var(--primary-dark)] hover:shadow-md disabled:opacity-50"
             disabled={!canAddContact}
             onClick={() => {
               const email = emailInput.trim().toLowerCase();
@@ -281,21 +281,22 @@ export default function SettingsPage() {
           </button>
         </div>
 
-        <div className="mt-4 space-y-3">
+        <div className="mt-5 space-y-3">
           {contacts.map((contact) => (
-            <article key={contact.email} className="rounded-xl border border-[var(--border)] p-3">
+            <article key={contact.email} className="rounded-2xl border border-[var(--border)] p-4 transition-all duration-200 hover:shadow-sm">
               <div className="flex items-center justify-between gap-3">
                 <div>
-                  <p className="font-semibold">{contact.email}</p>
-                  <span className="inline-flex rounded-full bg-black px-2 py-0.5 text-xs font-semibold text-white">
+                  <p className="font-medium text-foreground">{contact.email}</p>
+                  <span className={`mt-1 inline-flex rounded-full px-2.5 py-0.5 text-xs font-semibold ${contact.verified ? "bg-[#e8f5ee] text-[#3d7a5a]" : "bg-[var(--surface-muted)] text-[var(--text-secondary)]"}`}>
                     {contact.verified ? "verified" : "pending"}
                   </span>
                 </div>
-                <div className="flex items-center gap-2">
-                  <label className="flex items-center gap-2 text-sm text-[var(--text-secondary)]">
+                <div className="flex items-center gap-3">
+                  <label className="flex cursor-pointer items-center gap-2 text-sm text-[var(--text-secondary)]">
                     Alerts
                     <input
                       type="checkbox"
+                      className="h-4 w-4 accent-[var(--primary)]"
                       checked={Boolean(contact.alertsEnabled)}
                       onChange={(event) => {
                         const next = contacts.map((item) =>
@@ -307,7 +308,7 @@ export default function SettingsPage() {
                   </label>
                   <button
                     type="button"
-                    className="rounded p-1 text-red-600 hover:bg-red-50"
+                    className="rounded-xl p-2 text-[#c07068] transition-all duration-200 hover:bg-[#faf0ee]"
                     onClick={() => {
                       saveContacts(contacts.filter((item) => item.email !== contact.email));
                     }}
@@ -322,65 +323,65 @@ export default function SettingsPage() {
         </div>
       </section>
 
-      <section className="surface-card p-5 sm:p-6">
-        <h2 className="text-xl font-semibold">Alert Preferences</h2>
-        <p className="text-[var(--text-secondary)]">Configure when and how you receive alerts</p>
+      <section className="surface-card p-6 sm:p-7">
+        <h2 className="text-lg font-semibold text-foreground">Alert Preferences</h2>
+        <p className="mt-1 text-sm text-[var(--text-secondary)]">Configure when and how you receive alerts</p>
 
-        <div className="mt-5 space-y-4">
-          <label className="flex items-center justify-between rounded-lg border border-[var(--border)] px-3 py-2 text-sm">
+        <div className="mt-6 space-y-4">
+          <label className="flex cursor-pointer items-center justify-between rounded-2xl border border-[var(--border)] px-4 py-3 text-sm transition-all duration-200 hover:bg-[var(--surface-muted)]">
             <span>Burnout Risk Alerts</span>
-            <input type="checkbox" checked={burnoutRisk} onChange={(event) => setBurnoutRisk(event.target.checked)} />
+            <input type="checkbox" className="h-4 w-4 accent-[var(--primary)]" checked={burnoutRisk} onChange={(event) => setBurnoutRisk(event.target.checked)} />
           </label>
 
-          <label className="flex items-center justify-between rounded-lg border border-[var(--border)] px-3 py-2 text-sm">
+          <label className="flex cursor-pointer items-center justify-between rounded-2xl border border-[var(--border)] px-4 py-3 text-sm transition-all duration-200 hover:bg-[var(--surface-muted)]">
             <span>Anxiety Pattern Alerts</span>
-            <input type="checkbox" checked={anxietyPattern} onChange={(event) => setAnxietyPattern(event.target.checked)} />
+            <input type="checkbox" className="h-4 w-4 accent-[var(--primary)]" checked={anxietyPattern} onChange={(event) => setAnxietyPattern(event.target.checked)} />
           </label>
 
-          <label className="space-y-1 text-sm">
-            <span className="font-semibold">Alert Sensitivity</span>
-            <select value={sensitivity} onChange={(event) => setSensitivity(event.target.value as "low" | "medium" | "high")} className="field w-full px-3 py-2 outline-none">
+          <label className="space-y-1.5 text-sm">
+            <span className="font-medium text-foreground">Alert Sensitivity</span>
+            <select value={sensitivity} onChange={(event) => setSensitivity(event.target.value as "low" | "medium" | "high")} className="field w-full px-3.5 py-2.5 outline-none">
               <option value="low">Low - Minimal alerts</option>
               <option value="medium">Medium - Moderate concerns</option>
               <option value="high">High - Early warning</option>
             </select>
           </label>
 
-          <label className="flex items-center justify-between rounded-lg border border-[var(--border)] px-3 py-2 text-sm">
+          <label className="flex cursor-pointer items-center justify-between rounded-2xl border border-[var(--border)] px-4 py-3 text-sm transition-all duration-200 hover:bg-[var(--surface-muted)]">
             <span>Quiet Hours</span>
-            <input type="checkbox" checked={quietHoursEnabled} onChange={(event) => setQuietHoursEnabled(event.target.checked)} />
+            <input type="checkbox" className="h-4 w-4 accent-[var(--primary)]" checked={quietHoursEnabled} onChange={(event) => setQuietHoursEnabled(event.target.checked)} />
           </label>
 
           <div className="grid gap-3 md:grid-cols-2">
-            <label className="space-y-1 text-sm">
-              <span className="font-semibold">Start Time</span>
-              <input type="time" value={quietStart} disabled={!quietHoursEnabled} onChange={(event) => setQuietStart(event.target.value)} className="field w-full px-3 py-2 outline-none" />
+            <label className="space-y-1.5 text-sm">
+              <span className="font-medium text-foreground">Start Time</span>
+              <input type="time" value={quietStart} disabled={!quietHoursEnabled} onChange={(event) => setQuietStart(event.target.value)} className="field w-full px-3.5 py-2.5 outline-none disabled:opacity-50" />
             </label>
-            <label className="space-y-1 text-sm">
-              <span className="font-semibold">End Time</span>
-              <input type="time" value={quietEnd} disabled={!quietHoursEnabled} onChange={(event) => setQuietEnd(event.target.value)} className="field w-full px-3 py-2 outline-none" />
+            <label className="space-y-1.5 text-sm">
+              <span className="font-medium text-foreground">End Time</span>
+              <input type="time" value={quietEnd} disabled={!quietHoursEnabled} onChange={(event) => setQuietEnd(event.target.value)} className="field w-full px-3.5 py-2.5 outline-none disabled:opacity-50" />
             </label>
           </div>
         </div>
 
-        <button type="button" className="mt-5 rounded-lg bg-[var(--primary-blue)] px-4 py-2 text-sm font-semibold text-white" onClick={saveAlerts}>
+        <button type="button" className="mt-6 rounded-2xl bg-[var(--primary)] px-5 py-2.5 text-sm font-semibold text-white transition-all duration-200 hover:bg-[var(--primary-dark)] hover:shadow-md" onClick={saveAlerts}>
           Save Alert Preferences
         </button>
       </section>
 
-      <section className="surface-card p-5 sm:p-6">
-        <h2 className="text-xl font-semibold">Privacy Controls</h2>
-        <p className="text-[var(--text-secondary)]">Manage your data and privacy settings</p>
+      <section className="surface-card p-6 sm:p-7">
+        <h2 className="text-lg font-semibold text-foreground">Privacy Controls</h2>
+        <p className="mt-1 text-sm text-[var(--text-secondary)]">Manage your data and privacy settings</p>
 
-        <div className="mt-5 space-y-4">
-          <label className="flex items-center justify-between rounded-lg border border-[var(--border)] px-3 py-2 text-sm">
+        <div className="mt-6 space-y-4">
+          <label className="flex cursor-pointer items-center justify-between rounded-2xl border border-[var(--border)] px-4 py-3 text-sm transition-all duration-200 hover:bg-[var(--surface-muted)]">
             <span>Data Collection</span>
-            <input type="checkbox" checked={dataCollectionEnabled} onChange={(event) => setDataCollectionEnabled(event.target.checked)} />
+            <input type="checkbox" className="h-4 w-4 accent-[var(--primary)]" checked={dataCollectionEnabled} onChange={(event) => setDataCollectionEnabled(event.target.checked)} />
           </label>
 
           <button
             type="button"
-            className="inline-flex w-full items-center justify-center gap-2 rounded-lg border border-[var(--border)] bg-white px-4 py-2 text-sm font-semibold"
+            className="inline-flex w-full items-center justify-center gap-2 rounded-2xl border border-[var(--border)] bg-white px-5 py-3 text-sm font-semibold transition-all duration-200 hover:bg-[var(--surface-muted)] hover:shadow-sm"
             onClick={() => {
               const payload = {
                 exportedAt: new Date().toISOString(),
@@ -405,7 +406,7 @@ export default function SettingsPage() {
 
           <button
             type="button"
-            className="inline-flex w-full items-center justify-center gap-2 rounded-lg border border-red-200 bg-red-50 px-4 py-2 text-sm font-semibold text-red-600"
+            className="inline-flex w-full items-center justify-center gap-2 rounded-2xl border border-[#e0c4c0] bg-[#faf0ee] px-5 py-3 text-sm font-semibold text-[#8a5a52] transition-all duration-200 hover:bg-[#f5e8e6]"
             onClick={() => {
               const confirmed = window.confirm("Delete all your app data? This action cannot be undone.");
               if (!confirmed) return;
@@ -417,7 +418,7 @@ export default function SettingsPage() {
 
           <button
             type="button"
-            className="inline-flex w-full items-center justify-center gap-2 rounded-lg border border-red-300 bg-red-600 px-4 py-2 text-sm font-semibold text-white"
+            className="inline-flex w-full items-center justify-center gap-2 rounded-2xl border border-[#c07068] bg-[#c07068] px-5 py-3 text-sm font-semibold text-white transition-all duration-200 hover:bg-[#a85c55]"
             onClick={() => {
               const confirmed = window.confirm("Delete your account permanently? This action cannot be undone.");
               if (!confirmed) return;
