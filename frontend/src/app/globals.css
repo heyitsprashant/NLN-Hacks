@@ -1,23 +1,34 @@
 @import "tailwindcss";
 
 :root {
-  --primary-blue: #3b82f6;
-  --primary-dark: #1e40af;
-  --primary-soft: #dbeafe;
+  /* Primary — violet/indigo matched to sidebar & UI chrome */
+  --primary-blue: #6d28d9;
+  --primary-dark: #4c1d95;
+  --primary-soft: #ede9fe;
 
-  --emotion-anxiety: #ef4444;
-  --emotion-sadness: #6366f1;
-  --emotion-joy: #10b981;
-  --emotion-stress: #f59e0b;
-  --emotion-calm: #8b5cf6;
+  /* Per-feature accent colors used on buttons, headings, and borders */
+  --accent-dashboard: #0ea5e9;   /* sky blue   — Dashboard   */
+  --accent-journal:   #10b981;   /* emerald    — Journal      */
+  --accent-copilot:   #f59e0b;   /* amber      — AI Copilot  */
+  --accent-voice:     #ef4444;   /* red        — Voice       */
+  --accent-call:      #8b5cf6;   /* purple     — Call        */
+  --accent-settings:  #64748b;   /* slate      — Settings    */
 
-  --background: #f9fafb;
-  --surface: #ffffff;
-  --surface-muted: #f3f4f6;
-  --text-primary: #111827;
+  /* Emotion dots */
+  --emotion-anxiety: #f43f5e;
+  --emotion-sadness: #818cf8;
+  --emotion-joy:     #34d399;
+  --emotion-stress:  #fbbf24;
+  --emotion-calm:    #a78bfa;
+
+  /* Surface & text */
+  --background:     #f0eeff;
+  --surface:        #ffffff;
+  --surface-muted:  #f5f3ff;
+  --text-primary:   #1e1b4b;
   --text-secondary: #6b7280;
-  --border: #e5e7eb;
-  --ring: #93c5fd;
+  --border:         #ddd6fe;
+  --ring:           #c4b5fd;
 
   color-scheme: light;
 }
@@ -30,7 +41,7 @@
 }
 
 body {
-  background: var(--background);
+  background: linear-gradient(135deg, #ece9ff 0%, #f5f0ff 40%, #fff0f9 100%) fixed;
   color: var(--text-primary);
   font-family: var(--font-geist-sans), -apple-system, BlinkMacSystemFont, "Segoe UI",
     sans-serif;
@@ -40,13 +51,15 @@ body {
   border-color: var(--border);
 }
 
+/* ── Cards ─────────────────────────────────────────────────────────────── */
 .surface-card {
   border: 1px solid var(--border);
   background: var(--surface);
   border-radius: 14px;
-  box-shadow: 0 1px 2px rgb(17 24 39 / 0.04);
+  box-shadow: 0 1px 3px rgb(109 40 217 / 0.06), 0 1px 2px rgb(109 40 217 / 0.04);
 }
 
+/* ── Fields ─────────────────────────────────────────────────────────────── */
 .field {
   border: 1px solid var(--border);
   border-radius: 10px;
@@ -56,6 +69,22 @@ body {
 .field:focus-within {
   outline: 2px solid var(--ring);
   outline-offset: 1px;
+}
+
+/* ── Gradient page headings (h1 only) ────────────────────────────────────── */
+main h1 {
+  background: linear-gradient(110deg, var(--primary-blue) 0%, #ff2d9f 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+/* ── Colorise the generic gray action buttons without touching page files ── */
+.bg-gray-600 {
+  background-color: var(--primary-blue) !important;
+}
+.hover\:bg-gray-700:hover {
+  background-color: var(--primary-dark) !important;
 }
 
 @keyframes pulse-ring {

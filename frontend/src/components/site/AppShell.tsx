@@ -1,19 +1,36 @@
 "use client";
 
-import { useState } from "react";
-import Sidebar from "@/components/site/Sidebar";
+import dynamic from "next/dynamic";
+import TopNav from "@/components/site/TopNav";
+import Footer from "@/components/site/Footer";
+
 
 export default function AppShell({ children }: { children: React.ReactNode }) {
-  const [mobileOpen, setMobileOpen] = useState(false);
-
   return (
-    <div className="flex min-h-screen w-full">
-      <Sidebar mobileOpen={mobileOpen} onToggleMobile={() => setMobileOpen((v) => !v)} />
-      <main className="flex-1 lg:ml-64">
-        <div className="mx-auto w-full max-w-[1120px] px-4 pb-8 pt-4 sm:px-6 lg:px-8 lg:pt-8">
+    <div className="flex min-h-screen flex-col w-full">
+
+      {/* Full-screen cursor particle overlay */}
+      <div
+        style={{
+          position: "fixed",
+          inset: 0,
+          width: "100vw",
+          height: "100vh",
+          pointerEvents: "none",
+          zIndex: 9999,
+        }}
+      >
+      </div>
+
+      <TopNav />
+
+      <main className="flex-1 pt-16">
+        <div className="mx-auto w-full max-w-[1200px] px-4 pb-8 pt-8 sm:px-6 lg:px-8">
           {children}
         </div>
       </main>
+
+      <Footer />
     </div>
   );
 }
