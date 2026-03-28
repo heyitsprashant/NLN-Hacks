@@ -1,13 +1,38 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useInfiniteQuery, useMutation } from "@tanstack/react-query";
 import toast from "react-hot-toast";
-import { Search, Trash2, Upload, Send, ChevronDown, ArrowDownUp, Filter } from "lucide-react";
+import { Search, Trash2, Upload, Send, ChevronDown, ArrowDownUp, Filter, Mic, Square } from "lucide-react";
 import api from "@/lib/api";
 import { handleApiError } from "@/lib/errorHandler";
 import { formatReadableDate, formatRelativeTime } from "@/lib/time";
 import { useJournalStore, type JournalEmotion, type JournalEntry } from "@/store/journalStore";
+
+// Minimal Web Speech API types
+interface SpeechRecognitionAlternative { transcript: string }
+interface SpeechRecognitionResult { [index: number]: SpeechRecognitionAlternative }
+interface SpeechRecognitionResultList {
+  length: number;
+  [index: number]: SpeechRecognitionResult;
+}
+interface SpeechRecognitionEvent extends Event {
+  resultIndex: number;
+  results: SpeechRecognitionResultList;
+}
+interface SpeechRecognitionLike extends EventTarget {
+  continuous: boolean;
+  interimResults: boolean;
+  lang: string;
+  onresult: ((event: SpeechRecognitionEvent) => void) | null;
+  start(): void;
+  stop(): void;
+}
+type SpeechRecognitionCtor = new () => SpeechRecognitionLike;
+
+type VoiceState = "idle" | "recording";
+
+const WAVE_BARS = 24;
 
 type EntriesResponse = {
   entries: JournalEntry[];
@@ -76,6 +101,20 @@ export default function JournalPage() {
   const [fileHover, setFileHover] = useState(false);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [uploadProgress, setUploadProgress] = useState(0);
+
+  // ── Voice state ────────────────────────────────────────────────────────────
+  const [voiceState, setVoiceState] = useState<VoiceState>("idle");
+  const [waveBars, setWaveBars] = useState<number[]>(Array.from({ length: WAVE_BARS }, () => 4));
+  const [liveTranscript, setLiveTranscript] = useState("");
+
+  const mediaRecorderRef = useRef<MediaRecorder | null>(null);
+  const streamRef = useRef<MediaStream | null>(null);
+  const audioContextRef = useRef<AudioContext | null>(null);
+  const analyserRef = useRef<AnalyserNode | null>(null);
+  const waveformRafRef = useRef<number | null>(null);
+  const speechRecognitionRef = useRef<SpeechRecognitionLike | null>(null);
+  const liveTranscriptRef = useRef("");
+  // ──────────────────────────────────────────────────────────────────────────
 
   const textareaRef = useRef<HTMLTextAreaElement | null>(null);
   const fileInputRef = useRef<HTMLInputElement | null>(null);
@@ -204,6 +243,133 @@ export default function JournalPage() {
     });
   }, [entries, searchText, emotionFilter, sortOrder]);
 
+  // ── Voice: waveform ────────────────────────────────────────────────────────
+  const stopWaveform = useCallback(() => {
+    if (waveformRafRef.current) {
+      cancelAnimationFrame(waveformRafRef.current);
+      waveformRafRef.current = null;
+    }
+  }, []);
+
+  const startWaveform = useCallback(() => {
+    const analyser = analyserRef.current;
+    if (!analyser) return;
+    const dataArray = new Uint8Array(analyser.frequencyBinCount);
+    const tick = () => {
+      analyser.getByteFrequencyData(dataArray);
+      const chunkSize = Math.floor(dataArray.length / WAVE_BARS);
+      const next = Array.from({ length: WAVE_BARS }, (_, i) => {
+        let sum = 0;
+        for (let j = i * chunkSize; j < (i + 1) * chunkSize; j++) sum += dataArray[j];
+        return Math.max(4, Math.round((sum / chunkSize / 255) * 36));
+      });
+      setWaveBars(next);
+      waveformRafRef.current = requestAnimationFrame(tick);
+    };
+    tick();
+  }, []);
+
+  // ── Voice: SpeechRecognition ───────────────────────────────────────────────
+  const startTranscription = useCallback(() => {
+    const SpeechRecognitionCtor: SpeechRecognitionCtor | undefined =
+      (window as Window & { webkitSpeechRecognition?: SpeechRecognitionCtor }).webkitSpeechRecognition
+      ?? (window as Window & { SpeechRecognition?: SpeechRecognitionCtor }).SpeechRecognition;
+    if (!SpeechRecognitionCtor) return;
+
+    const recognition = new SpeechRecognitionCtor();
+    recognition.continuous = true;
+    recognition.interimResults = true;
+    recognition.lang = "en-US";
+
+    recognition.onresult = (event: SpeechRecognitionEvent) => {
+      let text = "";
+      for (let i = event.resultIndex; i < event.results.length; i++) {
+        text += event.results[i][0]?.transcript ?? "";
+      }
+      if (text.trim()) {
+        liveTranscriptRef.current = text.trim();
+        setLiveTranscript(text.trim());
+      }
+    };
+
+    recognition.start();
+    speechRecognitionRef.current = recognition;
+  }, []);
+
+  const startRecording = async () => {
+    if (voiceState === "recording") return;
+    liveTranscriptRef.current = "";
+    setLiveTranscript("");
+
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      streamRef.current = stream;
+
+      const mediaRecorder = new MediaRecorder(stream);
+      mediaRecorderRef.current = mediaRecorder;
+
+      mediaRecorder.onstop = () => {
+        streamRef.current?.getTracks().forEach((t) => t.stop());
+        stopWaveform();
+        setWaveBars(Array.from({ length: WAVE_BARS }, () => 4));
+        setVoiceState("idle");
+
+        const finalText = liveTranscriptRef.current.trim();
+        setLiveTranscript("");
+        if (finalText) {
+          // Append transcribed text to whatever is already in the textarea
+          setEntryText((prev) => {
+            const spacer = prev.trim().length > 0 ? " " : "";
+            return prev + spacer + finalText;
+          });
+          // Resize textarea to fit new content
+          setTimeout(() => {
+            if (textareaRef.current) {
+              textareaRef.current.style.height = "120px";
+              textareaRef.current.style.height = `${textareaRef.current.scrollHeight}px`;
+            }
+          }, 0);
+        } else {
+          toast("No speech detected. Try again.", { icon: "🎙️" });
+        }
+      };
+
+      const audioCtx = new AudioContext();
+      audioContextRef.current = audioCtx;
+      const analyser = audioCtx.createAnalyser();
+      analyser.fftSize = 256;
+      analyserRef.current = analyser;
+      audioCtx.createMediaStreamSource(stream).connect(analyser);
+
+      mediaRecorder.start();
+      setVoiceState("recording");
+      startWaveform();
+      startTranscription();
+    } catch {
+      toast.error("Microphone permission is required for voice input.");
+      setVoiceState("idle");
+    }
+  };
+
+  const stopRecording = () => {
+    if (speechRecognitionRef.current) {
+      speechRecognitionRef.current.stop();
+      speechRecognitionRef.current = null;
+    }
+    mediaRecorderRef.current?.stop();
+  };
+
+  // Cleanup on unmount
+  useEffect(() => {
+    return () => {
+      stopWaveform();
+      if (speechRecognitionRef.current) speechRecognitionRef.current.stop();
+      if (mediaRecorderRef.current?.state !== "inactive") mediaRecorderRef.current?.stop();
+      streamRef.current?.getTracks().forEach((t) => t.stop());
+      if (audioContextRef.current?.state !== "closed") void audioContextRef.current?.close();
+    };
+  }, [stopWaveform]);
+
   const onFilePicked = (file?: File | null) => {
     if (!file) return;
 
@@ -228,23 +394,75 @@ export default function JournalPage() {
         <p className="text-sm">Write about your day, feelings, or anything on your mind</p>
 
         <div className="mt-4">
-          <textarea
-            ref={textareaRef}
-            value={entryText}
-            onChange={(event) => {
-              setEntryText(event.target.value);
-              event.currentTarget.style.height = "120px";
-              event.currentTarget.style.height = `${event.currentTarget.scrollHeight}px`;
-            }}
-            placeholder="Start writing..."
-            className="field min-h-[120px] w-full resize-none p-4 text-sm outline-none"
-            rows={3}
-            aria-label="Journal entry text"
-          />
+          <div className={`field overflow-hidden transition-all ${voiceState === "recording" ? "ring-2 ring-(--accent-voice)" : ""}`}>
+            <textarea
+              ref={textareaRef}
+              value={entryText}
+              onChange={(event) => {
+                setEntryText(event.target.value);
+                event.currentTarget.style.height = "120px";
+                event.currentTarget.style.height = `${event.currentTarget.scrollHeight}px`;
+              }}
+              placeholder={voiceState === "recording" ? "Listening… speak now" : "Start writing, or press the mic to speak your thoughts…"}
+              className="min-h-[120px] w-full resize-none bg-transparent p-4 text-sm outline-none"
+              rows={3}
+              aria-label="Journal entry text"
+            />
+
+            {/* Live transcription strip */}
+            {voiceState === "recording" && (
+              <div className="border-t border-(--border) bg-[var(--accent-voice)]/5 px-4 py-2.5">
+                <div className="mb-2 flex items-center gap-2">
+                  <span className="h-2 w-2 animate-pulse rounded-full bg-[var(--accent-voice)]" />
+                  <span className="text-xs font-semibold text-[var(--accent-voice)]">Transcribing live…</span>
+                </div>
+                {/* Waveform */}
+                <div className="flex h-8 items-center gap-[2px]">
+                  {waveBars.map((h, i) => (
+                    <span
+                      key={`bar-${i}`}
+                      className="w-[3px] rounded-full bg-[var(--accent-voice)] transition-all duration-75"
+                      style={{ height: `${h}px`, opacity: 0.5 + (h / 36) * 0.5 }}
+                    />
+                  ))}
+                </div>
+                {liveTranscript ? (
+                  <p className="mt-2 text-sm italic text-[var(--text-secondary)] leading-relaxed">
+                    "{liveTranscript}"
+                  </p>
+                ) : (
+                  <p className="mt-2 text-xs text-[var(--text-secondary)] opacity-60">Speak now…</p>
+                )}
+              </div>
+            )}
+          </div>
         </div>
 
         <div className="mt-3 flex items-center justify-between">
-          <span className="text-sm ">{entryText.length} characters</span>
+          <div className="flex items-center gap-2">
+            <span className="text-sm text-(--text-secondary)">{entryText.length} characters</span>
+            {/* Mic / Stop button */}
+            {voiceState === "recording" ? (
+              <button
+                type="button"
+                aria-label="Stop recording"
+                className="relative flex h-8 w-8 items-center justify-center rounded-full bg-[var(--accent-voice)] text-white shadow-md transition hover:opacity-90"
+                onClick={stopRecording}
+              >
+                <Square className="h-3 w-3 fill-white" />
+                <span className="absolute inset-0 animate-ping rounded-full bg-[var(--accent-voice)] opacity-30" />
+              </button>
+            ) : (
+              <button
+                type="button"
+                aria-label="Start voice input"
+                className="flex h-8 w-8 items-center justify-center rounded-full border border-(--border) bg-white text-(--text-secondary) shadow-sm transition hover:border-(--primary-blue) hover:text-(--primary-blue)"
+                onClick={() => void startRecording()}
+              >
+                <Mic className="h-4 w-4" />
+              </button>
+            )}
+          </div>
           <button
             type="button"
             className="inline-flex items-center gap-2 rounded-lg bg-gray-600 px-4 py-2 text-sm font-semibold text-white transition hover:bg-gray-700 disabled:cursor-not-allowed disabled:opacity-50"
