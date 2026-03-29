@@ -267,12 +267,6 @@ export default function JournalPage() {
               border: "1px solid rgba(61,112,96,0.11)",
               boxShadow: "0 4px 24px rgba(61,112,96,0.07), 0 1px 4px rgba(61,112,96,0.04)",
             }}
-            onMouseMove={e => {
-              const el = e.currentTarget;
-              const rect = el.getBoundingClientRect();
-              el.style.setProperty('--mouse-x', `${e.clientX - rect.left}px`);
-              el.style.setProperty('--mouse-y', `${e.clientY - rect.top}px`);
-            }}
           >
             {/* Notebook header bar */}
             <div
