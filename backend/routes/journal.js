@@ -1,6 +1,6 @@
 const express = require('express');
 const Joi = require('joi');
-const { analyzeJournalEntry } = require('../services/aiService');
+const { analyzeJournalEntry, classifyWithMentalBert } = require('../services/aiService');
 const { detectPatternsFromEntries } = require('../services/patternDetector');
 const { shouldTriggerBurnout, triggerAlertEmails } = require('../services/alertSystem');
 const { readDb, updateDb, getUserId, ensureUser, newId } = require('../utils/dataStore');
@@ -12,6 +12,27 @@ const entrySchema = Joi.object({
   content: Joi.string().min(3),
   source: Joi.string().valid('web', 'mobile', 'upload').default('web'),
 }).or('text', 'content');
+
+const classifySchema = Joi.object({
+  text: Joi.string().min(3).required(),
+});
+
+router.post('/classify', async (req, res) => {
+  const { error, value } = classifySchema.validate(req.body || {});
+  if (error) return res.status(400).json({ success: false, message: error.message });
+
+  try {
+    const prediction = await classifyWithMentalBert(value.text);
+    return res.json({
+      success: true,
+      label: prediction.label,
+      confidence: prediction.confidence,
+      scores: prediction.scores,
+    });
+  } catch (err) {
+    return res.status(502).json({ success: false, message: 'MentalBERT service unavailable', detail: err.message });
+  }
+});
 
 router.post('/entry', async (req, res) => {
   const { error, value } = entrySchema.validate(req.body || {});

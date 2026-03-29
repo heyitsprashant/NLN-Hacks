@@ -1,5 +1,43 @@
 const { GoogleGenerativeAI } = require('@google/generative-ai');
 
+const MENTALBERT_API_URL = process.env.MENTALBERT_API_URL || 'http://127.0.0.1:8001/predict';
+const MENTALBERT_TIMEOUT_MS = Number(process.env.MENTALBERT_TIMEOUT_MS || 8000);
+
+function toEmotionFromLabel(label) {
+  const normalized = String(label || '').toLowerCase();
+  if (normalized === 'positive') return 'calm';
+  if (normalized === 'negative') return 'stress';
+  return 'neutral';
+}
+
+async function classifyWithMentalBert(text) {
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), MENTALBERT_TIMEOUT_MS);
+
+  try {
+    const response = await fetch(MENTALBERT_API_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ text }),
+      signal: controller.signal,
+    });
+
+    if (!response.ok) {
+      const body = await response.text();
+      throw new Error(`MentalBERT API ${response.status}: ${body}`);
+    }
+
+    const data = await response.json();
+    return {
+      label: String(data.label || 'neutral').toLowerCase(),
+      confidence: Number(data.confidence ?? 0.5),
+      scores: data.scores && typeof data.scores === 'object' ? data.scores : {},
+    };
+  } finally {
+    clearTimeout(timer);
+  }
+}
+
 function getModel() {
   if (!process.env.GEMINI_API_KEY) {
     return null;
@@ -29,6 +67,32 @@ async function analyzeJournalEntry(text) {
       confidence: 0.4,
     },
   };
+
+  try {
+    const prediction = await classifyWithMentalBert(text);
+    return {
+      emotion: {
+        primary: toEmotionFromLabel(prediction.label),
+        secondary: [],
+        intensity: Number(Math.max(0, Math.min(1, prediction.confidence || 0.5)).toFixed(3)),
+      },
+      context: {
+        category: 'general',
+        keywords: [],
+        entities: [],
+      },
+      sentiment_score:
+        prediction.label === 'positive' ? prediction.confidence : prediction.label === 'negative' ? -prediction.confidence : 0,
+      processing_metadata: {
+        model_used: 'mental/mental-bert-base-uncased',
+        processing_time_ms: 0,
+        confidence: Number(Math.max(0, Math.min(1, prediction.confidence || 0.5)).toFixed(3)),
+        raw_scores: prediction.scores,
+      },
+    };
+  } catch (error) {
+    console.error('MentalBERT analysis failed:', error.message);
+  }
 
   const model = getModel();
   if (!model) return fallback;
@@ -99,6 +163,7 @@ async function generateCopilotReply(message, context) {
 
 module.exports = {
   analyzeJournalEntry,
+  classifyWithMentalBert,
   generateSupportiveSummary,
   generateCopilotReply,
 };
