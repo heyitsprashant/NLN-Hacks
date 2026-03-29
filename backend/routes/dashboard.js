@@ -4,6 +4,24 @@ const { readDb, getUserId } = require('../utils/dataStore');
 
 const router = express.Router();
 
+function clamp(value, min, max) {
+  return Math.max(min, Math.min(max, value));
+}
+
+function moodScoreFromEntry(entry) {
+  const sentiment = Number(entry?.sentiment_score);
+  if (Number.isFinite(sentiment)) {
+    return clamp((sentiment + 1) / 2, 0, 1);
+  }
+
+  const intensity = clamp(Number(entry?.emotion?.intensity || 0.5), 0, 1);
+  const primary = String(entry?.emotion?.primary || 'neutral').toLowerCase();
+
+  if (['joy', 'calm', 'positive'].includes(primary)) return 0.5 + intensity * 0.5;
+  if (['sadness', 'stress', 'anxiety', 'negative'].includes(primary)) return 0.5 - intensity * 0.5;
+  return 0.5;
+}
+
 function trendFromSeries(series) {
   if (series.length < 2) return 'stable';
   const first = series[0].moodScore;
@@ -32,7 +50,7 @@ router.get('/mood-data', (req, res) => {
   }
 
   const points = Array.from(grouped.entries()).map(([date, list]) => {
-    const avg = list.reduce((sum, item) => sum + Number(item.emotion?.intensity || 0.5), 0) / list.length;
+    const avg = list.reduce((sum, item) => sum + moodScoreFromEntry(item), 0) / list.length;
 
     const emotions = {};
     for (const item of list) {
@@ -44,7 +62,7 @@ router.get('/mood-data', (req, res) => {
 
     return {
       timestamp: `${date}T00:00:00.000Z`,
-      moodScore: Number(avg.toFixed(2)),
+      moodScore: Number(clamp(avg, 0, 1).toFixed(2)),
       emotion: topEmotion,
     };
   });
