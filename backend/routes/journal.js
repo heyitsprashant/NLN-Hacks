@@ -10,6 +10,7 @@ const router = express.Router();
 const entrySchema = Joi.object({
   text: Joi.string().min(3),
   content: Joi.string().min(3),
+  entryDate: Joi.string().pattern(/^\d{4}-\d{2}-\d{2}$/),
   source: Joi.string().valid('web', 'mobile', 'upload').default('web'),
 }).or('text', 'content');
 
@@ -39,7 +40,17 @@ router.post('/entry', async (req, res) => {
   if (error) return res.status(400).json({ success: false, message: error.message });
 
   const userId = getUserId(req);
-  const createdAt = new Date().toISOString();
+  let createdAt = new Date().toISOString();
+  if (value.entryDate) {
+    const selectedDate = new Date(`${value.entryDate}T12:00:00`);
+    if (Number.isNaN(selectedDate.getTime())) {
+      return res.status(400).json({ success: false, message: 'Invalid entryDate format' });
+    }
+    if (selectedDate.getTime() > Date.now()) {
+      return res.status(400).json({ success: false, message: 'entryDate cannot be in the future' });
+    }
+    createdAt = selectedDate.toISOString();
+  }
 
   const entryText = value.text || value.content;
 
