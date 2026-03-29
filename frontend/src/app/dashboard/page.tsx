@@ -51,6 +51,7 @@ type PatternInsight = {
   entriesCount: number;
 };
 
+
 const emotionColor: Record<string, string> = {
   anxiety: "var(--emotion-anxiety)",
   sadness: "var(--emotion-sadness)",
@@ -59,44 +60,13 @@ const emotionColor: Record<string, string> = {
   calm: "var(--emotion-calm)",
 };
 
-const emotionEmoji: Record<string, string> = {
-  anxiety: "😰",
-  sadness: "😔",
-  joy: "😊",
-  stress: "😤",
-  calm: "😌",
-  neutral: "😐",
-};
-
 const severityConfig: Record<DashboardAlert["severity"], { classes: string; icon: typeof AlertCircle }> = {
   low:    { classes: "border-l-4 border-blue-400 bg-blue-50/80 text-blue-900",   icon: Info },
   medium: { classes: "border-l-4 border-amber-400 bg-amber-50/80 text-amber-900", icon: AlertCircle },
   high:   { classes: "border-l-4 border-red-400 bg-red-50/80 text-red-900",       icon: AlertCircle },
 };
 
-function fallbackMoodData(): MoodDataPoint[] {
-  const now = Date.now();
-  return [0.65, 0.45, 0.75, 0.35, 0.55, 0.8, 0.6].map((score, index) => {
-    const date = new Date(now - (6 - index) * 24 * 60 * 60 * 1000);
-    const emotion = ["stress", "sadness", "joy", "anxiety", "calm", "joy", "calm"][index];
-    return { timestamp: date.toISOString(), moodScore: score, emotion };
-  });
-}
 
-function fallbackAlerts(): DashboardAlert[] {
-  return [
-    { id: "burnout-risk",    type: "Burnout Risk",    severity: "medium", message: "Detected consistent work-related stress over 3 consecutive days",   timestamp: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000).toISOString() },
-    { id: "anxiety-pattern", type: "Anxiety Pattern", severity: "low",    message: "Increased anxiety before scheduled meetings",                       timestamp: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000).toISOString() },
-  ];
-}
-
-function fallbackPatterns(): PatternInsight[] {
-  return [
-    { id: "anxiety-meetings",  description: "Anxiety before meetings",         confidenceScore: 0.85, entriesCount: 12 },
-    { id: "socializing-mood",  description: "Mood improves after socializing",  confidenceScore: 0.72, entriesCount: 8  },
-    { id: "monday-stress",     description: "Stress peaks on Monday mornings",  confidenceScore: 0.68, entriesCount: 15 },
-  ];
-}
 
 function getEmotionColor(emotion: string): string {
   return emotionColor[emotion.toLowerCase()] ?? "var(--primary-blue)";
@@ -123,8 +93,9 @@ export default function DashboardPage() {
       const data = response.data;
       if (Array.isArray(data)) return data as MoodDataPoint[];
       if (Array.isArray(data?.points)) return data.points as MoodDataPoint[];
-      return fallbackMoodData();
+      throw new Error("No mood data available");
     },
+    retry: false,
   });
 
   const summaryQuery = useQuery<{ summary?: string; generatedAt?: string }>({
@@ -134,11 +105,9 @@ export default function DashboardPage() {
       const data = response.data;
       if (typeof data?.summary === "string") return data;
       if (typeof data === "string") return { summary: data };
-      return {
-        summary: "Your stress increased due to work-related entries this week, while social interactions showed a positive effect on mood.",
-        generatedAt: new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString(),
-      };
+      throw new Error("No summary available");
     },
+    retry: false,
   });
 
   const alertsQuery = useQuery<DashboardAlert[]>({
@@ -148,8 +117,9 @@ export default function DashboardPage() {
       const data = response.data;
       if (Array.isArray(data)) return data as DashboardAlert[];
       if (Array.isArray(data?.alerts)) return data.alerts as DashboardAlert[];
-      return fallbackAlerts();
+      throw new Error("No alerts available");
     },
+    retry: false,
   });
 
   const patternsQuery = useQuery<PatternInsight[]>({
@@ -159,14 +129,15 @@ export default function DashboardPage() {
       const data = response.data;
       if (Array.isArray(data)) return data as PatternInsight[];
       if (Array.isArray(data?.patterns)) return data.patterns as PatternInsight[];
-      return fallbackPatterns();
+      throw new Error("No patterns available");
     },
+    retry: false,
   });
   // ────────────────────────────────────────────────────────────────────────
 
   const chartData = useMemo(() => {
-    const source = moodQuery.data?.length ? moodQuery.data : fallbackMoodData();
-    return source.map((point) => ({
+    if (!moodQuery.data?.length) return [];
+    return moodQuery.data.map((point) => ({
       ...point,
       dayLabel: new Date(point.timestamp).toLocaleDateString(undefined, { month: "short", day: "numeric" }),
       moodPct: Math.round(point.moodScore * 100),
@@ -174,18 +145,18 @@ export default function DashboardPage() {
   }, [moodQuery.data]);
 
   const stats = useMemo(() => {
-    if (!chartData.length) return { avgMood: 0, topEmotion: "neutral", daysTracked: 0 };
+    if (!chartData.length) return { avgMood: 0, topEmotion: "", daysTracked: 0 };
     const avgMood = chartData.reduce((sum, p) => sum + p.moodScore, 0) / chartData.length;
     const counts = chartData.reduce<Record<string, number>>((acc, p) => {
       acc[p.emotion] = (acc[p.emotion] ?? 0) + 1;
       return acc;
     }, {});
-    const topEmotion = Object.entries(counts).sort((a, b) => b[1] - a[1])[0]?.[0] ?? "neutral";
+    const topEmotion = Object.entries(counts).sort((a, b) => b[1] - a[1])[0]?.[0] ?? "";
     return { avgMood, topEmotion, daysTracked: chartData.length };
   }, [chartData]);
 
   const visibleAlerts = useMemo(
-    () => (alertsQuery.data?.length ? alertsQuery.data : fallbackAlerts()).filter((a) => !dismissedAlerts.includes(a.id)),
+    () => (alertsQuery.data?.length ? alertsQuery.data.filter((a) => !dismissedAlerts.includes(a.id)) : []),
     [alertsQuery.data, dismissedAlerts]
   );
 
@@ -240,7 +211,7 @@ export default function DashboardPage() {
           <div>
             <p className="text-xs font-semibold uppercase tracking-wider text-(--text-secondary)">Top Emotion</p>
             <p className="mt-0.5 text-2xl font-bold capitalize text-foreground">
-              {emotionEmoji[stats.topEmotion] ?? "😐"} {stats.topEmotion}
+              {stats.topEmotion || "N/A"}
             </p>
           </div>
         </SpotlightCard>
@@ -346,7 +317,7 @@ export default function DashboardPage() {
             </button>
           </div>
 
-          <div className="mt-5 min-h-[130px] rounded-xl bg-(--surface-muted) p-4 text-[15px] leading-7 text-foreground">
+          <div className="mt-5 min-h-32.5 rounded-xl bg-(--surface-muted) p-4 text-[15px] leading-7 text-foreground">
             {summaryQuery.isLoading ? (
               <div className="space-y-2.5">
                 <div className="h-4 w-full animate-pulse rounded-full bg-gray-200" />
@@ -430,7 +401,7 @@ export default function DashboardPage() {
         ) : null}
 
         <div className="mt-5 grid gap-4 md:grid-cols-2 xl:grid-cols-3">
-          {(patternsQuery.data?.length ? patternsQuery.data : fallbackPatterns()).map((pattern) => {
+          {(patternsQuery.data?.length ? patternsQuery.data : []).map((pattern) => {
             const pct = Math.round(pattern.confidenceScore * 100);
             return (
               <article key={pattern.id} className="flex flex-col gap-3 rounded-xl border border-(--border) bg-(--surface-muted)/40 p-4">

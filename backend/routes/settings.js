@@ -107,7 +107,6 @@ router.delete('/delete-data', async (req, res) => {
     db.chat_messages = db.chat_messages.filter((item) => item.user_id !== userId);
     db.calls = db.calls.filter((item) => item.user_id !== userId);
     db.alerts = db.alerts.filter((item) => item.user_id !== userId);
-    db.voice_history = db.voice_history.filter((item) => item.user_id !== userId);
   });
 
   res.json({ success: true, message: 'All user data has been permanently deleted' });
@@ -123,7 +122,6 @@ router.delete('/delete-account', async (req, res) => {
     db.chat_messages = db.chat_messages.filter((item) => item.user_id !== userId);
     db.calls = db.calls.filter((item) => item.user_id !== userId);
     db.alerts = db.alerts.filter((item) => item.user_id !== userId);
-    db.voice_history = db.voice_history.filter((item) => item.user_id !== userId);
   });
 
   res.json({ success: true, message: 'Account deleted' });

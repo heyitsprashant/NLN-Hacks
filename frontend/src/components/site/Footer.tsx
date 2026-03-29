@@ -12,9 +12,10 @@ export default function Footer() {
         background: "rgba(255,255,255,0.96)",
       }}
     >
-      <div className="mx-auto max-w-[1200px] px-4 sm:px-6 lg:px-8 py-10">
+      <div className="mx-auto max-w-300 px-4 sm:px-6 lg:px-8 py-10">
 
         <div className="grid grid-cols-1 gap-8 sm:grid-cols-3">
+
 
           {/* Brand col */}
           <div className="flex flex-col gap-2">
@@ -29,7 +30,7 @@ export default function Footer() {
             >
               Antara
             </span>
-            <p className="text-sm leading-relaxed max-w-[220px]" style={{ color: "var(--text-secondary)" }}>
+            <p className="text-sm leading-relaxed max-w-55" style={{ color: "var(--text-secondary)" }}>
               Your personal mental health journal, insights, and AI companion — always here for you.
             </p>
             <div className="mt-2 flex items-center gap-1.5 text-xs font-medium" style={{ color: "var(--text-secondary)" }}>
@@ -48,7 +49,6 @@ export default function Footer() {
                 { href: "/journal",   label: "Journal"    },
                 { href: "/dashboard", label: "Dashboard"  },
                 { href: "/copilot",   label: "AI Copilot" },
-                { href: "/voice",     label: "Voice Mode" },
                 { href: "/call",      label: "Call"       },
                 { href: "/settings",  label: "Settings"   },
               ].map((link) => (

@@ -44,7 +44,6 @@ app.use('/api/dashboard', require('./routes/dashboard'));
 app.use('/api/copilot', require('./routes/copilot'));
 app.use('/api/settings', require('./routes/settings'));
 app.use('/api/call', require('./routes/call'));
-app.use('/api/voice', require('./routes/voice'));
 
 app.use((err, req, res, next) => {
   console.error(err);

@@ -40,6 +40,7 @@ type EntriesResponse = {
   hasMore: boolean;
 };
 
+
 const emotionStyles: Record<JournalEmotion, string> = {
   anxiety: "bg-[var(--emotion-anxiety)]",
   sadness: "bg-[var(--emotion-sadness)]",
@@ -47,15 +48,6 @@ const emotionStyles: Record<JournalEmotion, string> = {
   stress: "bg-[var(--emotion-stress)]",
   calm: "bg-[var(--emotion-calm)]",
   neutral: "bg-slate-400",
-};
-
-const emotionEmoji: Record<JournalEmotion | "neutral", string> = {
-  anxiety: "😰",
-  sadness: "😔",
-  joy: "😊",
-  stress: "😤",
-  calm: "😌",
-  neutral: "😐",
 };
 
 function getEmotionFromText(content: string): JournalEmotion {
@@ -68,29 +60,7 @@ function getEmotionFromText(content: string): JournalEmotion {
   return "neutral";
 }
 
-function fallbackEntries(): JournalEntry[] {
-  const now = Date.now();
-  return [
-    {
-      id: "entry-1",
-      content: "Had a great conversation with my team today. Feeling much more confident about the project deadline. The collaboration really helped reduce my anxiety.",
-      emotion: "joy",
-      createdAt: new Date(now - 24 * 60 * 60 * 1000).toISOString(),
-    },
-    {
-      id: "entry-2",
-      content: "Feeling anxious about tomorrow's presentation. Can't stop thinking about all the things that could go wrong. Need to remember my breathing exercises.",
-      emotion: "anxiety",
-      createdAt: new Date(now - 2 * 24 * 60 * 60 * 1000).toISOString(),
-    },
-    {
-      id: "entry-3",
-      content: "Took a long walk in the park during lunch. The weather was beautiful and it really helped clear my mind. Feeling more centered now.",
-      emotion: "calm",
-      createdAt: new Date(now - 3 * 24 * 60 * 60 * 1000).toISOString(),
-    },
-  ];
-}
+
 
 function truncateText(text: string, length = 160): string {
   if (text.length <= length) return text;
@@ -134,9 +104,10 @@ export default function JournalPage() {
       const data = response.data;
       if (Array.isArray(data)) return { entries: data as JournalEntry[], page: Number(pageParam), hasMore: false };
       if (Array.isArray(data?.entries)) return { entries: data.entries as JournalEntry[], page: typeof data.page === "number" ? data.page : Number(pageParam), hasMore: Boolean(data.hasMore) };
-      return { entries: fallbackEntries(), page: 1, hasMore: false };
+      throw new Error("No journal entries available");
     },
     getNextPageParam: (lastPage) => (lastPage.hasMore ? lastPage.page + 1 : undefined),
+    retry: false,
   });
 
   useEffect(() => { setLoading(entriesQuery.isFetching); }, [entriesQuery.isFetching, setLoading]);
@@ -144,7 +115,7 @@ export default function JournalPage() {
   useEffect(() => {
     const all = entriesQuery.data?.pages.flatMap((p) => p.entries) ?? [];
     if (all.length > 0) { setEntries(all); return; }
-    if (!entriesQuery.isLoading && entries.length === 0) setEntries(fallbackEntries());
+    if (!entriesQuery.isLoading && entries.length === 0) setEntries([]);
   }, [entriesQuery.data, entriesQuery.isLoading, setEntries, entries.length]);
 
   const createMutation = useMutation({
@@ -335,7 +306,7 @@ export default function JournalPage() {
               />
 
               {/* Line numbers */}
-              <div className="absolute top-0 bottom-0 left-0 flex flex-col pt-[6px]" style={{ width: "52px", gap: "16px", pointerEvents: "none" }}>
+              <div className="absolute top-0 bottom-0 left-0 flex flex-col pt-1.5" style={{ width: "52px", gap: "16px", pointerEvents: "none" }}>
                 {Array.from({ length: 20 }).map((_, i) => (
                   <span key={i} className="block text-center select-none" style={{ fontSize: "10px", color: "rgba(61,112,96,0.16)", lineHeight: "12px" }}>
                     {i + 1}
@@ -378,7 +349,7 @@ export default function JournalPage() {
                   <div className="flex items-center gap-2 mb-1.5">
                     <span className="h-2 w-2 animate-pulse rounded-full" style={{ background: "var(--accent-voice)" }} />
                     <span className="text-xs font-semibold" style={{ color: "var(--accent-voice)" }}>Transcribing live…</span>
-                    <div className="ml-2 flex items-end gap-[2px] h-5">
+                    <div className="ml-2 flex items-end gap-0.5 h-5">
                       {waveBars.map((h, i) => (
                         <span key={i} className="rounded-full transition-all duration-75" style={{ width: "2px", height: `${h}px`, background: "var(--accent-voice)", opacity: 0.45 + (h / 32) * 0.55 }} />
                       ))}
@@ -531,7 +502,7 @@ export default function JournalPage() {
                   <article key={entry.id} className="rounded-xl p-4 transition-shadow" style={{ background: "#ffffff", border: "1px solid rgba(61,112,96,0.08)", boxShadow: "0 1px 4px rgba(61,112,96,0.04)" }}>
                     <div className="flex items-center justify-between gap-2">
                       <span className={`rounded-full px-2 py-0.5 text-[11px] font-semibold text-white ${emotionStyles[entry.emotion] || emotionStyles.neutral}`}>
-                        {emotionEmoji[entry.emotion]} {entry.emotion[0].toUpperCase() + entry.emotion.slice(1)}
+                        {entry.emotion[0].toUpperCase() + entry.emotion.slice(1)}
                       </span>
                       <button type="button" aria-label="Delete entry" className="rounded p-1 text-red-400 hover:bg-red-50 transition-colors" onClick={() => { if (window.confirm("Delete this entry permanently?")) deleteMutation.mutate(entry.id); }}>
                         <Trash2 className="h-3.5 w-3.5" />

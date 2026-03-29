@@ -12,7 +12,6 @@ const emptyDb = {
   alerts: [],
   chat_messages: [],
   calls: [],
-  voice_history: [],
 };
 
 let writeQueue = Promise.resolve();
@@ -38,7 +37,6 @@ function readDb() {
       alerts: Array.isArray(parsed.alerts) ? parsed.alerts : [],
       chat_messages: Array.isArray(parsed.chat_messages) ? parsed.chat_messages : [],
       calls: Array.isArray(parsed.calls) ? parsed.calls : [],
-      voice_history: Array.isArray(parsed.voice_history) ? parsed.voice_history : [],
     };
   } catch {
     return { ...emptyDb };

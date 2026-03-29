@@ -60,7 +60,6 @@ Fill in these env vars:
 - alerts
 - chat_messages
 - calls
-- voice_history
 
 ## Deployment (Easy)
 Railway is easiest:

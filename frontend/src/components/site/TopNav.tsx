@@ -7,7 +7,6 @@ import {
   LayoutDashboard,
   Book,
   MessageSquare,
-  Mic,
   PhoneCall,
   Settings,
   Menu,
@@ -21,7 +20,6 @@ const links = [
   { href: "/journal",   label: "Journal",    icon: Book,            accent: "var(--accent-journal)"   },
   { href: "/dashboard", label: "Dashboard",  icon: LayoutDashboard, accent: "var(--accent-dashboard)" },
   { href: "/copilot",   label: "AI Copilot", icon: MessageSquare,   accent: "var(--accent-copilot)"   },
-  { href: "/voice",     label: "Voice",      icon: Mic,             accent: "var(--accent-voice)"     },
   { href: "/call",      label: "Call",       icon: PhoneCall,       accent: "var(--accent-call)"      },
   { href: "/settings",  label: "Settings",   icon: Settings,        accent: "var(--accent-settings)"  },
 ];
@@ -39,7 +37,7 @@ export default function TopNav() {
         borderColor: "rgba(42,80,69,0.18)",
       }}
     >
-      <div className="mx-auto flex h-16 max-w-[1200px] items-center justify-between px-4 sm:px-6 lg:px-8">
+      <div className="mx-auto flex h-16 max-w-300 items-center justify-between px-4 sm:px-6 lg:px-8">
 
         {/* Brand */}
         <div

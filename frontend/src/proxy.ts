@@ -5,7 +5,6 @@ export const config = {
     "/dashboard/:path*",
     "/journal/:path*",
     "/copilot/:path*",
-    "/voice/:path*",
     "/call/:path*",
     "/settings/:path*",
   ],
