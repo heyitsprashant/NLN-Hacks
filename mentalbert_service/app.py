@@ -1,26 +1,69 @@
 import os
+import re
 from typing import Dict, List
 
 import torch
 from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel, Field
-from transformers import AutoModelForSequenceClassification, AutoTokenizer
+from transformers import AutoConfig, AutoModelForSequenceClassification, AutoTokenizer
 
-MODEL_ID = os.getenv("MENTALBERT_MODEL_ID", "mental/mental-bert-base-uncased")
+REQUESTED_MODEL_ID = os.getenv("MENTALBERT_MODEL_ID", "mental/mental-bert-base-uncased")
+FALLBACK_MODEL_ID = os.getenv(
+    "MENTALBERT_FALLBACK_MODEL_ID",
+    "distilbert-base-uncased-finetuned-sst-2-english",
+)
 MAX_LENGTH = int(os.getenv("MENTALBERT_MAX_LENGTH", "256"))
-
-# Keep labels simple and beginner-friendly.
-LABELS: List[str] = ["negative", "neutral", "positive"]
 
 app = FastAPI(title="MentalBERT Service", version="1.0.0")
 
 
-tokenizer = AutoTokenizer.from_pretrained(MODEL_ID)
-model = AutoModelForSequenceClassification.from_pretrained(
-    MODEL_ID,
-    num_labels=len(LABELS),
-)
+def _is_sequence_classifier(model_id: str) -> bool:
+    config = AutoConfig.from_pretrained(model_id)
+    architectures = [str(item).lower() for item in (config.architectures or [])]
+    return any("sequenceclassification" in arch for arch in architectures)
+
+
+ACTIVE_MODEL_ID = REQUESTED_MODEL_ID
+if not _is_sequence_classifier(REQUESTED_MODEL_ID):
+    print(
+        f"[mentalbert_service] Model '{REQUESTED_MODEL_ID}' is not a sequence classifier. "
+        f"Falling back to '{FALLBACK_MODEL_ID}'."
+    )
+    ACTIVE_MODEL_ID = FALLBACK_MODEL_ID
+
+tokenizer = AutoTokenizer.from_pretrained(ACTIVE_MODEL_ID)
+model = AutoModelForSequenceClassification.from_pretrained(ACTIVE_MODEL_ID)
 model.eval()
+
+
+def _resolve_labels() -> List[str]:
+    # Optional override for projects that already know model label semantics.
+    env_labels = os.getenv("MENTALBERT_LABELS", "").strip()
+    if env_labels:
+        resolved = [item.strip().lower() for item in env_labels.split(",") if item.strip()]
+        if len(resolved) == model.config.num_labels:
+            return resolved
+
+    id2label = getattr(model.config, "id2label", None)
+    if isinstance(id2label, dict) and id2label:
+        labels = [
+            str(id2label[i]).strip().lower()
+            for i in sorted(id2label.keys())
+        ]
+
+        # Many HF checkpoints store generic labels like LABEL_0/LABEL_1.
+        if labels and all(re.fullmatch(r"label_\d+", label) for label in labels):
+            if len(labels) == 2:
+                return ["negative", "positive"]
+            if len(labels) == 3:
+                return ["negative", "neutral", "positive"]
+        return labels
+
+    # Last-resort fallback when config does not expose labels.
+    return [f"label_{i}" for i in range(model.config.num_labels)]
+
+
+LABELS: List[str] = _resolve_labels()
 
 
 class PredictRequest(BaseModel):
@@ -39,7 +82,12 @@ def _softmax(values: torch.Tensor) -> torch.Tensor:
 
 @app.get("/health")
 def health() -> Dict[str, str]:
-    return {"status": "ok", "model": MODEL_ID}
+    return {
+        "status": "ok",
+        "model": ACTIVE_MODEL_ID,
+        "requested_model": REQUESTED_MODEL_ID,
+        "labels": ",".join(LABELS),
+    }
 
 
 @app.post("/predict", response_model=PredictResponse)
