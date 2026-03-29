@@ -73,6 +73,7 @@ const todayLabel = new Date().toLocaleDateString(undefined, {
 
 export default function JournalPage() {
   const [entryText, setEntryText] = useState("");
+  const [entryDate, setEntryDate] = useState(() => new Date().toISOString().slice(0, 10));
   const [searchText, setSearchText] = useState("");
   const [emotionFilter, setEmotionFilter] = useState<"all" | JournalEmotion>("all");
   const [sortOrder, setSortOrder] = useState<"newest" | "oldest">("newest");
@@ -119,7 +120,7 @@ export default function JournalPage() {
   }, [entriesQuery.data, entriesQuery.isLoading, setEntries, entries.length]);
 
   const createMutation = useMutation({
-    mutationFn: async (payload: { content: string }) => {
+    mutationFn: async (payload: { content: string; entryDate: string }) => {
       const response = await api.post("/api/journal/entry", payload);
       return response.data as Partial<JournalEntry>;
     },
@@ -396,11 +397,23 @@ export default function JournalPage() {
                     ? `${entryText.length} chars · ${entryText.trim().split(/\s+/).filter(Boolean).length} words`
                     : "Start typing…"}
                 </span>
+                <label className="flex items-center gap-1.5 text-xs" style={{ color: "var(--text-secondary)" }}>
+                  Date
+                  <input
+                    type="date"
+                    value={entryDate}
+                    max={new Date().toISOString().slice(0, 10)}
+                    onChange={(e) => setEntryDate(e.target.value)}
+                    className="rounded-md border px-2 py-1 text-xs outline-none"
+                    style={{ borderColor: "rgba(61,112,96,0.20)", background: "#fff" }}
+                    aria-label="Journal entry date"
+                  />
+                </label>
               </div>
               <button
                 type="button"
                 disabled={createMutation.isPending || entryText.trim().length === 0}
-                onClick={() => createMutation.mutate({ content: entryText.trim() })}
+                onClick={() => createMutation.mutate({ content: entryText.trim(), entryDate })}
                 className="inline-flex items-center gap-2 rounded-lg px-4 py-2 text-sm font-semibold text-white transition disabled:cursor-not-allowed disabled:opacity-50"
                 style={{ background: "linear-gradient(135deg, #2a5045 0%, #3d7060 100%)" }}
               >
