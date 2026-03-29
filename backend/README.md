@@ -67,3 +67,44 @@ Railway is easiest:
 2. Create Railway project from repo.
 3. Add env vars from `.env`.
 4. Deploy.
+
+## Local MentalBERT Integration (Node + Python)
+This backend is wired to call a local FastAPI service for journal classification.
+
+### 1. Start Python service
+From workspace root:
+```bash
+cd mentalbert_service
+python -m venv .venv
+.venv\Scripts\activate
+pip install -r requirements.txt
+huggingface-cli login
+uvicorn app:app --host 127.0.0.1 --port 8001 --reload
+```
+
+### 2. Configure backend env
+Set these in `backend/.env`:
+- `MENTALBERT_API_URL=http://127.0.0.1:8001/predict`
+- `MENTALBERT_TIMEOUT_MS=8000`
+
+### 3. Start backend
+```bash
+cd backend
+npm install
+npm run dev
+```
+
+### 4. Test end-to-end
+Classify only:
+```bash
+curl -X POST http://localhost:3001/api/journal/classify -H "Content-Type: application/json" -d "{\"text\":\"I feel stressed and exhausted today\"}"
+```
+
+Create entry (analysis included):
+```bash
+curl -X POST http://localhost:3001/api/journal/entry -H "Content-Type: application/json" -d "{\"text\":\"I feel stressed and exhausted today\"}"
+```
+
+Notes:
+- The first Python run downloads and caches the model locally.
+- If Python service is down, backend returns a safe fallback analysis.
