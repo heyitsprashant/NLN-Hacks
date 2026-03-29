@@ -30,6 +30,17 @@ const emotionBadgeStyles: Record<string, string> = {
   joy: "bg-emerald-100 text-emerald-700",
 };
 
+const DEFAULT_SUPPORT_NUMBER = "+1 (844) 351-2168";
+
+function isPlaceholderSupportNumber(value: string): boolean {
+  const normalized = value.replace(/\s+/g, "").toLowerCase();
+  return (
+    normalized.includes("(000)000-0000")
+    || normalized.includes("(555)123-4567")
+    || normalized === "+10000000000"
+  );
+}
+
 export default function CallPage() {
   const [expanded, setExpanded] = useState<Record<string, boolean>>({});
 
@@ -69,7 +80,11 @@ export default function CallPage() {
   });
 
   const phoneNumber = useMemo(() => {
-    return phoneQuery.data?.twilioNumber || phoneQuery.data?.phoneNumber || "+1 (555) 123-4567";
+    const fromApi = phoneQuery.data?.twilioNumber || phoneQuery.data?.phoneNumber || "";
+    if (!fromApi || isPlaceholderSupportNumber(fromApi)) {
+      return DEFAULT_SUPPORT_NUMBER;
+    }
+    return fromApi;
   }, [phoneQuery.data]);
 
   return (

@@ -259,9 +259,212 @@ async function generateCopilotReply(message, context) {
   }
 }
 
+const THERAPIST_CALL_SYSTEM_PROMPT = `You are "Antara", a calm and supportive emotional-support companion on a phone call. Speak like a warm therapist-style listener: reflective, gentle, non-judgmental.
+Do NOT claim to be a licensed therapist or doctor. Do not diagnose. Do not provide medical/legal instructions.
+Primary goal: help the caller feel heard, clarify what they feel, and guide them to one small next step.
+Keep responses short and spoken: 1-3 sentences, maximum ~35 words. No bullet points. No markdown. No labels.
+Ask one open-ended question at the end most of the time.
+Use the conversation history to avoid repeating yourself.
+If the transcript is unclear, ask a brief clarifying question.
+If the user says they want to stop (bye/stop/hang up), respond with a short caring goodbye.
+
+SAFETY RULE:
+If the caller mentions self-harm, suicide, wanting to die, or harming others, respond calmly and directly:
+- Encourage immediate help (local emergency services / trusted person nearby).
+- Ask if they are in immediate danger right now.
+- Do not continue normal coaching until safety is addressed.
+
+OUTPUT:
+Return only the exact words to be spoken to the caller.`;
+
+function hasSafetyRiskContent(text) {
+  const normalized = String(text || '').toLowerCase();
+  const riskPatterns = [
+    /suicide/,
+    /kill\s+myself/,
+    /want\s+to\s+die/,
+    /end\s+my\s+life/,
+    /self[-\s]?harm/,
+    /hurt\s+myself/,
+    /harm\s+someone/,
+    /hurt\s+someone/,
+  ];
+  return riskPatterns.some((pattern) => pattern.test(normalized));
+}
+
+function normalizeSpeechReply(text) {
+  const collapsed = String(text || '').replace(/\s+/g, ' ').trim();
+  if (!collapsed) return 'I am here with you. What feels most important to share right now?';
+
+  const words = collapsed.split(' ');
+  if (words.length <= 38) return collapsed;
+  return `${words.slice(0, 38).join(' ')}...`;
+}
+
+function buildTherapistFallbackReply(userSaid, history) {
+  const spoken = String(userSaid || '').trim();
+  if (!spoken) {
+    return 'I am here with you. Could you share what feels hardest right now?';
+  }
+
+  const hasQuestionRecently = Array.isArray(history)
+    ? history.slice(-4).some((turn) => String(turn?.text || '').includes('?'))
+    : false;
+
+  if (hasQuestionRecently) {
+    return normalizeSpeechReply('Thank you for sharing that with me. It sounds like this has been heavy, and you do not have to carry it alone. What part feels most draining today?');
+  }
+
+  return normalizeSpeechReply('I hear you, and what you are feeling makes sense in this moment. Let us take one small step together. What would feel slightly easier in the next hour?');
+}
+
+async function generateTherapistVoiceReply({
+  userSaid,
+  history = [],
+  journalContext = null,
+  callerMemory = null,
+}) {
+  const latestUserText = String(userSaid || '').trim();
+
+  if (hasSafetyRiskContent(latestUserText)) {
+    return 'Thank you for telling me. Your safety matters most right now, so please contact local emergency services or a trusted person nearby immediately. Are you in immediate danger right now?';
+  }
+
+  const modelConfig = getModel();
+  if (!modelConfig) {
+    return buildTherapistFallbackReply(latestUserText, history);
+  }
+
+  const trimmedHistory = Array.isArray(history)
+    ? history.slice(-24).map((turn) => ({
+      role: turn?.role === 'assistant' ? 'assistant' : 'user',
+      text: String(turn?.text || '').trim(),
+    }))
+    : [];
+
+  const prompt = [
+    THERAPIST_CALL_SYSTEM_PROMPT,
+    '',
+    'INPUT EACH TURN (JSON):',
+    JSON.stringify(
+      {
+        user_said: latestUserText,
+        history: trimmedHistory,
+        journal_context: journalContext || null,
+        caller_memory: callerMemory || null,
+      },
+      null,
+      2,
+    ),
+  ].join('\n');
+
+  try {
+    const result = await modelConfig.model.generateContent(prompt);
+    return normalizeSpeechReply(result.response.text());
+  } catch (error) {
+    console.error('Gemini therapist call response failed:', {
+      model: modelConfig.modelName,
+      message: error.message,
+    });
+    return buildTherapistFallbackReply(latestUserText, history);
+  }
+}
+
+async function generateTrustedContactEmail(input) {
+  const {
+    userName = 'your trusted contact',
+    userHandle = '@profile',
+    contactName = 'there',
+    alertTitle = 'Well-being alert',
+    situationSummary = 'They may be going through a difficult period.',
+    recommendedSupport = 'Please check in with empathy and practical help.',
+  } = input || {};
+
+  const teamSignature = 'Team 18 from NLN';
+  const requiredHeaderNote = '[This is not the spam email but the test email from Team18]';
+  const requiredFooterNote = '[team 18]';
+  const bccLine = `Multi-recipient BCC test: ${situationSummary}`;
+
+  const fallback = [
+    `Hello trusted contact of ${userName},`,
+    '',
+    `You are receiving this message because you are listed as a trusted contact for ${userHandle} (${userName}).`,
+    '',
+    requiredHeaderNote,
+    '',
+    bccLine,
+    '',
+    `${recommendedSupport}`,
+    '',
+    'A calm check-in, listening without judgment, and helping with small next steps can make a meaningful difference.',
+    '',
+    'Thank you for being there.',
+    requiredFooterNote,
+    '',
+    'Best regards,',
+    teamSignature,
+  ].join('\n');
+
+  const modelConfig = getModel();
+  if (!modelConfig) {
+    return fallback;
+  }
+
+  const prompt = [
+    'Write a supportive plain-text trusted-contact email.',
+    'Output requirements (must follow exactly):',
+    '- Use plain text only. No markdown.',
+    '- Keep warm, calm, actionable tone.',
+    '- Keep the two bracketed notes EXACTLY as provided below.',
+    '- Include the BCC test line exactly with the provided situation text.',
+    '- Close with Team 18 signature exactly.',
+    '- Do not add diagnosis or legal language.',
+    '- Keep this structure and order:',
+    `  1) Hello trusted contact of ${userName},`,
+    `  2) You are receiving this message because you are listed as a trusted contact for ${userHandle} (${userName}).`,
+    `  3) ${requiredHeaderNote}`,
+    `  4) ${bccLine}`,
+    `  5) ${recommendedSupport}`,
+    '  6) A calm check-in, listening without judgment, and helping with small next steps can make a meaningful difference.',
+    '  7) Thank you for being there.',
+    `  8) ${requiredFooterNote}`,
+    `  9) Best regards,`,
+    `  10) ${teamSignature}`,
+    '',
+    `Trusted contact name: ${contactName}`,
+    `Profile handle: ${userHandle}`,
+    `Profile name: ${userName}`,
+    `Alert title: ${alertTitle}`,
+    `Situation: ${situationSummary}`,
+    `Suggested support: ${recommendedSupport}`,
+  ].join('\n');
+
+  try {
+    const result = await modelConfig.model.generateContent(prompt);
+    const text = result.response.text().trim();
+    if (!text) return fallback;
+
+    const hasRequiredLines =
+      text.includes(requiredHeaderNote) &&
+      text.includes(requiredFooterNote) &&
+      text.includes(teamSignature) &&
+      text.includes(bccLine);
+
+    return hasRequiredLines ? text : fallback;
+  } catch (error) {
+    console.error('Gemini trusted contact email failed:', {
+      model: modelConfig.modelName,
+      message: error.message,
+    });
+    return fallback;
+  }
+}
+
 module.exports = {
   analyzeJournalEntry,
   classifyWithMentalBert,
   generateSupportiveSummary,
   generateCopilotReply,
+  generateTherapistVoiceReply,
+  generateTrustedContactEmail,
 };

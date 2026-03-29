@@ -2,7 +2,12 @@ const express = require('express');
 const Joi = require('joi');
 const { analyzeJournalEntry, classifyWithMentalBert } = require('../services/aiService');
 const { detectPatternsFromEntries } = require('../services/patternDetector');
-const { shouldTriggerBurnout, triggerAlertEmails } = require('../services/alertSystem');
+const {
+  shouldTriggerBurnout,
+  evaluateLowWellbeingAlert,
+  evaluateAverageMoodAlert,
+  triggerAlertEmails,
+} = require('../services/alertSystem');
 const { readDb, updateDb, getUserId, ensureUser, newId } = require('../utils/dataStore');
 
 const router = express.Router();
@@ -63,6 +68,8 @@ router.post('/entry', async (req, res) => {
     processed: false,
   };
 
+  let journalUpdateEmailPromise = Promise.resolve([]);
+
   await updateDb((db) => {
     ensureUser(db, userId);
     db.journal_entries.unshift(entry);
@@ -101,6 +108,34 @@ router.post('/entry', async (req, res) => {
     }
 
     const burnout = shouldTriggerBurnout(userEntries);
+    const user = ensureUser(db, userId);
+
+    const lowWellbeing = evaluateLowWellbeingAlert(user, userEntries, nowIso);
+    const avgMoodAlert = evaluateAverageMoodAlert(user, userEntries, nowIso);
+    user.settings = {
+      ...user.settings,
+      low_wellbeing_tracker: lowWellbeing.tracker,
+      avg_mood_tracker: avgMoodAlert.tracker,
+    };
+
+    const sendEveryJournalUpdate = String(process.env.JOURNAL_UPDATE_EMAIL_EVERY_TIME || 'true').toLowerCase() === 'true';
+    if (sendEveryJournalUpdate) {
+      journalUpdateEmailPromise = triggerAlertEmails(
+        user,
+        { title: 'Journal Updated', severity: 'info' },
+        {
+          entries: userEntries,
+          ignoreAlertToggle: true,
+          allowFallbackRecipient: true,
+          fallbackRecipient: process.env.SMTP_FROM_EMAIL || process.env.SMTP_USER,
+          situationSummary: `A new journal entry was added on ${new Date(createdAt).toLocaleDateString('en-US')}. ${
+            analysis?.emotion?.primary ? `Latest detected emotion: ${analysis.emotion.primary}.` : ''
+          }`.trim(),
+          recommendedSupport: 'Please check in soon, listen without judgment, and encourage one small helpful step today.',
+        },
+      );
+    }
+
     if (burnout) {
       const alert = {
         id: newId('alert'),
@@ -119,8 +154,7 @@ router.post('/entry', async (req, res) => {
 
       db.alerts.unshift(alert);
 
-      const user = ensureUser(db, userId);
-      triggerAlertEmails(user, burnout)
+      triggerAlertEmails(user, burnout, { entries: userEntries })
         .then((sent) => {
           updateDb((db2) => {
             const latest = db2.alerts.find((item) => item.id === alert.id);
@@ -137,10 +171,78 @@ router.post('/entry', async (req, res) => {
           });
         });
     }
+
+    if (lowWellbeing.alert) {
+      const alert = {
+        id: newId('alert'),
+        user_id: userId,
+        ...lowWellbeing.alert,
+        status: 'pending',
+        created_at: nowIso,
+        resolved_at: null,
+        emails_sent: [],
+      };
+
+      db.alerts.unshift(alert);
+
+      triggerAlertEmails(user, lowWellbeing.alert, { entries: userEntries })
+        .then((sent) => {
+          updateDb((db2) => {
+            const latest = db2.alerts.find((item) => item.id === alert.id);
+            if (!latest) return;
+            latest.status = sent.some((item) => item.status === 'sent') ? 'sent' : 'failed';
+            latest.emails_sent = sent;
+          });
+        })
+        .catch(() => {
+          updateDb((db2) => {
+            const latest = db2.alerts.find((item) => item.id === alert.id);
+            if (!latest) return;
+            latest.status = 'failed';
+          });
+        });
+    }
+
+    if (avgMoodAlert.alert) {
+      const alert = {
+        id: newId('alert'),
+        user_id: userId,
+        ...avgMoodAlert.alert,
+        status: 'pending',
+        created_at: nowIso,
+        resolved_at: null,
+        emails_sent: [],
+      };
+
+      db.alerts.unshift(alert);
+
+      triggerAlertEmails(user, avgMoodAlert.alert, { entries: userEntries })
+        .then((sent) => {
+          updateDb((db2) => {
+            const latest = db2.alerts.find((item) => item.id === alert.id);
+            if (!latest) return;
+            latest.status = sent.some((item) => item.status === 'sent') ? 'sent' : 'failed';
+            latest.emails_sent = sent;
+          });
+        })
+        .catch(() => {
+          updateDb((db2) => {
+            const latest = db2.alerts.find((item) => item.id === alert.id);
+            if (!latest) return;
+            latest.status = 'failed';
+          });
+        });
+    }
   });
 
   const db = readDb();
   const saved = db.journal_entries.find((item) => item.id === entry.id);
+  let journalEmailStatus = [];
+  try {
+    journalEmailStatus = await journalUpdateEmailPromise;
+  } catch (error) {
+    console.error('Journal update email send failed:', error.message);
+  }
 
   return res.status(201).json({
     id: saved.id,
@@ -148,6 +250,7 @@ router.post('/entry', async (req, res) => {
     emotion: saved.emotion?.primary || 'neutral',
     createdAt: saved.created_at,
     source: saved.source,
+    emailStatus: journalEmailStatus,
   });
 });
 

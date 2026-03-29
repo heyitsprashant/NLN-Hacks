@@ -1,6 +1,11 @@
 const cron = require('node-cron');
 const { detectPatternsFromEntries } = require('../services/patternDetector');
-const { shouldTriggerBurnout } = require('../services/alertSystem');
+const {
+  shouldTriggerBurnout,
+  evaluateLowWellbeingAlert,
+  evaluateAverageMoodAlert,
+  triggerAlertEmails,
+} = require('../services/alertSystem');
 const { readDb, updateDb, ensureUser, newId } = require('../utils/dataStore');
 
 async function runPatternSweep() {
@@ -15,12 +20,13 @@ async function runPatternSweep() {
 
     const patterns = detectPatternsFromEntries(entries);
     const burnout = shouldTriggerBurnout(entries);
+    const nowIso = new Date().toISOString();
+    const pendingAlertSends = [];
 
     await updateDb((nextDb) => {
-      ensureUser(nextDb, userId);
+      const user = ensureUser(nextDb, userId);
 
       nextDb.patterns = nextDb.patterns.filter((p) => !(p.user_id === userId && p.status === 'active'));
-      const nowIso = new Date().toISOString();
 
       for (const pattern of patterns) {
         nextDb.patterns.push({
@@ -33,7 +39,7 @@ async function runPatternSweep() {
       }
 
       if (burnout) {
-        nextDb.alerts.unshift({
+        const alert = {
           id: newId('alert'),
           user_id: userId,
           ...burnout,
@@ -46,9 +52,73 @@ async function runPatternSweep() {
           created_at: nowIso,
           resolved_at: null,
           emails_sent: [],
-        });
+        };
+
+        nextDb.alerts.unshift(alert);
+        pendingAlertSends.push({ id: alert.id, payload: burnout });
+      }
+
+      const lowWellbeing = evaluateLowWellbeingAlert(user, entries, nowIso);
+      const avgMoodAlert = evaluateAverageMoodAlert(user, entries, nowIso);
+      user.settings = {
+        ...user.settings,
+        low_wellbeing_tracker: lowWellbeing.tracker,
+        avg_mood_tracker: avgMoodAlert.tracker,
+      };
+
+      if (lowWellbeing.alert) {
+        const alert = {
+          id: newId('alert'),
+          user_id: userId,
+          ...lowWellbeing.alert,
+          status: 'pending',
+          created_at: nowIso,
+          resolved_at: null,
+          emails_sent: [],
+        };
+
+        nextDb.alerts.unshift(alert);
+        pendingAlertSends.push({ id: alert.id, payload: lowWellbeing.alert });
+      }
+
+      if (avgMoodAlert.alert) {
+        const alert = {
+          id: newId('alert'),
+          user_id: userId,
+          ...avgMoodAlert.alert,
+          status: 'pending',
+          created_at: nowIso,
+          resolved_at: null,
+          emails_sent: [],
+        };
+
+        nextDb.alerts.unshift(alert);
+        pendingAlertSends.push({ id: alert.id, payload: avgMoodAlert.alert });
       }
     });
+
+    if (pendingAlertSends.length > 0) {
+      const latestDb = readDb();
+      const user = ensureUser(latestDb, userId);
+
+      for (const pending of pendingAlertSends) {
+        try {
+          const sent = await triggerAlertEmails(user, pending.payload, { entries });
+          await updateDb((db2) => {
+            const target = db2.alerts.find((item) => item.id === pending.id);
+            if (!target) return;
+            target.status = sent.some((item) => item.status === 'sent') ? 'sent' : 'failed';
+            target.emails_sent = sent;
+          });
+        } catch {
+          await updateDb((db2) => {
+            const target = db2.alerts.find((item) => item.id === pending.id);
+            if (!target) return;
+            target.status = 'failed';
+          });
+        }
+      }
+    }
   }
 }
 

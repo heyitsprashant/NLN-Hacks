@@ -108,3 +108,45 @@ curl -X POST http://localhost:3001/api/journal/entry -H "Content-Type: applicati
 Notes:
 - The first Python run downloads and caches the model locally.
 - If Python service is down, backend returns a safe fallback analysis.
+
+## Twilio Inbound Voice Demo Setup
+This project supports inbound therapist-style calls with Twilio.
+
+### Required env vars
+Set these in `backend/.env`:
+- `TWILIO_ACCOUNT_SID`
+- `TWILIO_AUTH_TOKEN`
+- `TWILIO_PHONE_NUMBER`
+- `PUBLIC_BASE_URL` (your public tunnel URL, such as ngrok)
+
+Optional call-flow tuning:
+- `TWILIO_GATHER_TIMEOUT` (default `10`)
+- `TWILIO_MIN_CALL_DURATION_SECONDS` (default `30`)
+- `TWILIO_MAX_CALL_TURNS` (default `30`)
+- `TWILIO_MAX_CALL_DURATION_SECONDS` (default `1200`)
+
+Example local tunnel:
+```bash
+ngrok http 3001
+```
+
+Set `PUBLIC_BASE_URL` to the generated HTTPS URL.
+
+### Configure Twilio phone number webhooks
+In the Twilio Console for your number:
+- Voice webhook (A call comes in): `POST {PUBLIC_BASE_URL}/api/call/voice`
+- Status callback (optional): `POST {PUBLIC_BASE_URL}/api/call/status`
+
+After this, calling your Twilio number will start a voice conversation with Antara and save transcript history to `db.calls`.
+
+### Two ready demo scripts
+Use this endpoint to fetch two prebuilt voice demo scenarios:
+
+```bash
+GET /api/call/demo-scenarios
+```
+
+Each scenario includes:
+- `opening`: first sentence to say on call
+- `followUps`: 2-3 next lines to drive a realistic back-and-forth
+- `expectedOutcome`: what your audience should hear from Antara

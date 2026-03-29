@@ -19,7 +19,7 @@ function getTransporter() {
   });
 }
 
-async function sendAlertEmail({ to, subject, text }) {
+async function sendAlertEmail({ to, bcc, subject, text }) {
   const transporter = getTransporter();
   if (!transporter) {
     return { success: false, message: 'SMTP not configured' };
@@ -27,10 +27,17 @@ async function sendAlertEmail({ to, subject, text }) {
 
   const fromName = process.env.SMTP_FROM_NAME || 'Mental Health Support';
   const fromEmail = process.env.SMTP_FROM_EMAIL || process.env.SMTP_USER;
+  const normalizedBcc = Array.isArray(bcc)
+    ? bcc.filter(Boolean)
+    : typeof bcc === 'string' && bcc.trim()
+      ? [bcc.trim()]
+      : [];
 
   await transporter.sendMail({
     from: `${fromName} <${fromEmail}>`,
-    to,
+    // Keep an explicit recipient for providers that reject empty `to` with BCC-only sends.
+    to: to || fromEmail,
+    ...(normalizedBcc.length > 0 ? { bcc: normalizedBcc } : {}),
     subject,
     text,
   });

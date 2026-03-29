@@ -12,7 +12,7 @@ const contactsSchema = Joi.object({
         email: Joi.string().email().required(),
         verified: Joi.boolean().optional(),
         alertsEnabled: Joi.boolean().optional(),
-      }),
+      }).unknown(true),
     )
     .required(),
 });
@@ -42,7 +42,7 @@ router.get('/user', (req, res) => {
 });
 
 router.put('/contacts', async (req, res) => {
-  const { error, value } = contactsSchema.validate(req.body || {});
+  const { error, value } = contactsSchema.validate(req.body || {}, { stripUnknown: true });
   if (error) return res.status(400).json({ success: false, message: error.message });
 
   const userId = getUserId(req);

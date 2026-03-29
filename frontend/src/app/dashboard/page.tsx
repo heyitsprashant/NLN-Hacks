@@ -81,6 +81,7 @@ const confidenceGradient: (score: number) => string = (score) => {
 export default function DashboardPage() {
   const [dismissedAlerts, setDismissedAlerts] = useState<string[]>([]);
   const [mounted, setMounted] = useState(false);
+  const [shownPopupIds, setShownPopupIds] = useState<string[]>([]);
 
   // Defer chart rendering to client — avoids recharts width(-1) SSR warning
   useEffect(() => setMounted(true), []);
@@ -159,6 +160,19 @@ export default function DashboardPage() {
     () => (alertsQuery.data?.length ? alertsQuery.data.filter((a) => !dismissedAlerts.includes(a.id)) : []),
     [alertsQuery.data, dismissedAlerts]
   );
+
+  useEffect(() => {
+    if (!mounted) return;
+    const avgMoodAlert = visibleAlerts.find((alert) => alert.type === "avg_mood_below_40" && alert.severity === "high");
+    if (!avgMoodAlert) return;
+    if (shownPopupIds.includes(avgMoodAlert.id)) return;
+
+    toast.error("Average mood is below 40. Trusted contacts have been notified with a support email.", {
+      duration: 8000,
+      id: `avg-mood-alert-${avgMoodAlert.id}`,
+    });
+    setShownPopupIds((prev) => [...prev, avgMoodAlert.id]);
+  }, [mounted, visibleAlerts, shownPopupIds]);
 
   const greetingHour = new Date().getHours();
   const greeting = greetingHour < 12 ? "Good morning" : greetingHour < 17 ? "Good afternoon" : "Good evening";
