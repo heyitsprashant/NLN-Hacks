@@ -1,34 +1,36 @@
 @import "tailwindcss";
 
 :root {
-  /* Primary — violet/indigo matched to sidebar & UI chrome */
-  --primary-blue: #6d28d9;
-  --primary-dark: #4c1d95;
-  --primary-soft: #ede9fe;
+  /* ── Mental health journaling palette ───────────────────────────── */
 
-  /* Per-feature accent colors used on buttons, headings, and borders */
-  --accent-dashboard: #0ea5e9;   /* sky blue   — Dashboard   */
-  --accent-journal:   #10b981;   /* emerald    — Journal      */
-  --accent-copilot:   #f59e0b;   /* amber      — AI Copilot  */
-  --accent-voice:     #ef4444;   /* red        — Voice       */
-  --accent-call:      #8b5cf6;   /* purple     — Call        */
-  --accent-settings:  #64748b;   /* slate      — Settings    */
+  /* Primary — dark forest green (high contrast on white) */
+  --primary-blue: #2a5045;
+  --primary-dark: #1a3530;
+  --primary-soft: #e4f0eb;          /* light mint for active bg */
 
-  /* Emotion dots */
-  --emotion-anxiety: #f43f5e;
-  --emotion-sadness: #818cf8;
-  --emotion-joy:     #34d399;
-  --emotion-stress:  #fbbf24;
-  --emotion-calm:    #a78bfa;
+  /* Per-feature accent colors — gentle, non-clinical */
+  --accent-dashboard: #5c8a6a;   /* sage green    — Dashboard   */
+  --accent-journal:   #7c6fcd;   /* soft lavender — Journal     */
+  --accent-copilot:   #e8927a;   /* warm peach    — AI Copilot  */
+  --accent-voice:     #c45e7a;   /* dusty rose    — Voice       */
+  --accent-call:      #4f86bf;   /* calm blue     — Call        */
+  --accent-settings:  #8a9ab0;   /* muted slate   — Settings    */
 
-  /* Surface & text */
-  --background:     #f0eeff;
+  /* Emotion palette — soft, supportive tones */
+  --emotion-anxiety: #d97b8f;
+  --emotion-sadness: #6f9bcf;
+  --emotion-joy:     #5cb87a;
+  --emotion-stress:  #d9955a;
+  --emotion-calm:    #6fb5a8;
+
+  /* Surfaces & text */
+  --background:     #ffffff;          /* pure white canvas */
   --surface:        #ffffff;
-  --surface-muted:  #f5f3ff;
-  --text-primary:   #1e1b4b;
-  --text-secondary: #6b7280;
-  --border:         #ddd6fe;
-  --ring:           #c4b5fd;
+  --surface-muted:  #f5f9f7;          /* faint green-white for card hover */
+  --text-primary:   #1a3530;          /* near-black forest green */
+  --text-secondary: #3d5f50;          /* readable dark sage */
+  --border:         rgba(42,80,69,0.14);
+  --ring:           rgba(42,80,69,0.30);
 
   color-scheme: light;
 }
@@ -36,15 +38,22 @@
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--text-primary);
-  --font-sans: var(--font-geist-sans);
+  --font-sans: var(--font-nunito);
   --font-mono: var(--font-geist-mono);
+  --font-serif: var(--font-lora);
 }
 
 body {
-  background: linear-gradient(135deg, #ece9ff 0%, #f5f0ff 40%, #fff0f9 100%) fixed;
+  /* Pure white — dark green + lavender pop against it with maximum contrast */
+  background: #ffffff;
   color: var(--text-primary);
-  font-family: var(--font-geist-sans), -apple-system, BlinkMacSystemFont, "Segoe UI",
-    sans-serif;
+  font-family: var(--font-nunito), system-ui, -apple-system, sans-serif;
+  overflow-x: hidden;
+}
+
+/* Headings use Lora serif for warmth and reflection */
+h1, h2, h3 {
+  font-family: var(--font-lora), Georgia, serif;
 }
 
 * {
@@ -55,8 +64,14 @@ body {
 .surface-card {
   border: 1px solid var(--border);
   background: var(--surface);
-  border-radius: 14px;
-  box-shadow: 0 1px 3px rgb(109 40 217 / 0.06), 0 1px 2px rgb(109 40 217 / 0.04);
+  border-radius: 16px;
+  box-shadow: 0 1px 3px rgb(124 111 205 / 0.07), 0 1px 2px rgb(124 111 205 / 0.05);
+  transition: box-shadow 0.25s ease, transform 0.25s ease;
+}
+
+.surface-card:hover {
+  box-shadow: 0 8px 32px rgb(124 111 205 / 0.12), 0 2px 8px rgb(124 111 205 / 0.07);
+  transform: translateY(-2px);
 }
 
 /* ── Fields ─────────────────────────────────────────────────────────────── */
@@ -71,15 +86,15 @@ body {
   outline-offset: 1px;
 }
 
-/* ── Gradient page headings (h1 only) ────────────────────────────────────── */
+/* ── Gradient page h1 — green to lavender ───────────────────────────────── */
 main h1 {
-  background: linear-gradient(110deg, var(--primary-blue) 0%, #ff2d9f 100%);
+  background: linear-gradient(110deg, var(--primary-blue) 0%, #7c6fcd 100%);
   -webkit-background-clip: text;
   background-clip: text;
   -webkit-text-fill-color: transparent;
 }
 
-/* ── Colorise the generic gray action buttons without touching page files ── */
+/* ── Keep legacy gray buttons themed ───────────────────────────────────── */
 .bg-gray-600 {
   background-color: var(--primary-blue) !important;
 }
@@ -87,19 +102,11 @@ main h1 {
   background-color: var(--primary-dark) !important;
 }
 
+/* ── Voice recording pulse ring ─────────────────────────────────────────── */
 @keyframes pulse-ring {
-  0% {
-    transform: scale(1);
-    opacity: 1;
-  }
-  70% {
-    transform: scale(1.08);
-    opacity: 0.35;
-  }
-  100% {
-    transform: scale(1.1);
-    opacity: 0;
-  }
+  0%   { transform: scale(1);   opacity: 1; }
+  70%  { transform: scale(1.08); opacity: 0.35; }
+  100% { transform: scale(1.1);  opacity: 0; }
 }
 
 .recording-pulse::after {
@@ -107,6 +114,108 @@ main h1 {
   position: absolute;
   inset: -6px;
   border-radius: 9999px;
-  border: 3px solid rgb(239 68 68 / 0.4);
+  border: 3px solid rgb(196 94 122 / 0.4);
   animation: pulse-ring 1.6s ease-out infinite;
+}
+
+/* ── SpotlightCard ───────────────────────────────────────────────────────── */
+.spotlight-card {
+  position: relative;
+  overflow: hidden;
+  --mouse-x: 50%;
+  --mouse-y: 50%;
+  --spotlight-color: rgba(61, 112, 96, 0.10);
+  --spotlight-opacity: 0;
+}
+
+.spotlight-card::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(280px circle at var(--mouse-x) var(--mouse-y), var(--spotlight-color), transparent 70%);
+  opacity: var(--spotlight-opacity);
+  transition: opacity 0.4s ease;
+  pointer-events: none;
+  z-index: 0;
+  border-radius: inherit;
+}
+
+.spotlight-card > * {
+  position: relative;
+  z-index: 1;
+}
+
+/* ── Entrance animations ─────────────────────────────────────────────────── */
+@keyframes fadeInUp {
+  from { opacity: 0; transform: translateY(22px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+@keyframes slideInRight {
+  from { opacity: 0; transform: translateX(16px); }
+  to   { opacity: 1; transform: translateX(0); }
+}
+
+@keyframes scaleIn {
+  from { opacity: 0; transform: scale(0.94); }
+  to   { opacity: 1; transform: scale(1); }
+}
+
+.animate-fade-in-up {
+  animation: fadeInUp 0.5s cubic-bezier(0.22, 0.68, 0, 1.1) both;
+}
+
+.animate-fade-in {
+  animation: fadeIn 0.4s ease both;
+}
+
+.animate-scale-in {
+  animation: scaleIn 0.4s cubic-bezier(0.22, 0.68, 0, 1.2) both;
+}
+
+/* ── Hero gradient banner — dark green to lavender ──────────────────────── */
+.hero-banner {
+  position: relative;
+  overflow: hidden;
+  border-radius: 18px;
+  background: linear-gradient(135deg, #1a3530 0%, #2a5045 45%, #7c6fcd 100%);
+  padding: 1.75rem 2rem;
+  color: #f0fff8;
+}
+
+.hero-banner::before {
+  content: "";
+  position: absolute;
+  top: -40px;
+  right: -40px;
+  width: 160px;
+  height: 160px;
+  border-radius: 9999px;
+  background: rgba(255,255,255,0.10);
+}
+
+.hero-banner::after {
+  content: "";
+  position: absolute;
+  bottom: -32px;
+  right: 100px;
+  width: 100px;
+  height: 100px;
+  border-radius: 9999px;
+  background: rgba(255,255,255,0.07);
+}
+
+/* ── Paper-line texture for journal ──────────────────────────────────────── */
+.paper-bg {
+  background-image: repeating-linear-gradient(
+    to bottom,
+    transparent,
+    transparent 27px,
+    rgba(61, 112, 96, 0.06) 28px
+  );
 }

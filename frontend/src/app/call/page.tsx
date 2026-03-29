@@ -74,10 +74,6 @@ export default function CallPage() {
 
   return (
     <div className="space-y-6">
-      <header>
-        <h1 className="text-[2.2rem] font-bold tracking-tight">Call Support</h1>
-        <p className="mt-1 text-lg text-(--text-secondary)">Speak directly with your AI companion via phone</p>
-      </header>
 
       <section className="surface-card border-blue-200 bg-blue-50 p-6 text-center sm:p-10">
         <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-(--primary-blue) text-white">

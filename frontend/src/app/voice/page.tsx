@@ -281,11 +281,11 @@ export default function VoicePage() {
   return (
     <div className="space-y-6">
 
-      <section className="surface-card p-6 text-center sm:p-10">
+      <section className="surface-card animate-fade-in-up p-6 text-center sm:p-10">
         <button
           type="button"
           aria-label="Start or stop voice recording"
-          className={`relative mx-auto flex h-28 w-28 items-center justify-center rounded-full text-white shadow-lg transition ${getStateClasses(state)}`}
+          className={`relative mx-auto flex h-20 w-20 sm:h-28 sm:w-28 items-center justify-center rounded-full text-white shadow-lg transition ${getStateClasses(state)}`}
           onClick={() => {
             if (state === "recording") {
               stopRecording();
@@ -301,7 +301,7 @@ export default function VoicePage() {
           <Mic className="h-10 w-10" />
         </button>
 
-        <h2 className="mt-6 text-3xl font-semibold">{stateTitle}</h2>
+          <h2 className="mt-6 text-2xl sm:text-3xl font-semibold">{stateTitle}</h2>
         <p className="mt-2 text-base text-(--text-secondary)">
           {state === "idle" ? "Click the microphone to start speaking" : "Voice interaction is currently active"}
         </p>
@@ -314,7 +314,7 @@ export default function VoicePage() {
           {isMuted ? "Unmute" : "Mute"}
         </button>
 
-        <div className="mt-6 flex h-24 items-end justify-center gap-1 rounded-xl border border-(--border) bg-(--surface-muted) px-4 py-3">
+        <div className="mt-6 flex h-16 sm:h-24 items-end justify-center gap-1 rounded-xl border border-(--border) bg-(--surface-muted) px-4 py-3">
           {waveBars.map((value, index) => (
             <span
               key={`wave-${index}`}
@@ -325,7 +325,7 @@ export default function VoicePage() {
         </div>
       </section>
 
-      <div className="grid gap-6 xl:grid-cols-2">
+      <div className="animate-fade-in-up grid gap-6 xl:grid-cols-2" style={{ animationDelay: "160ms" }}>
         <section className="surface-card p-5 sm:p-6">
           <h3 className="text-lg font-semibold">Live Transcription</h3>
           <p className="text-sm text-(--text-secondary)">Edit transcript before sending for AI analysis</p>

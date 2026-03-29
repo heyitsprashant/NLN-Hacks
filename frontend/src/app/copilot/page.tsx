@@ -349,10 +349,12 @@ export default function CopilotPage() {
   // ─────────────────────────────────────────────────────────────────────────
   return (
     <div className="space-y-6">
-      <div className="grid gap-6 xl:grid-cols-[1fr_320px]">
+      <div className="animate-fade-in-up grid gap-6 xl:grid-cols-[1fr_320px]">
         {/* ── Chat panel ──────────────────────────────────────────────────── */}
-        <section className="surface-card flex h-[calc(100vh-220px)] min-h-[560px] flex-col p-4 sm:p-5">
-        <header className="text-2xl font-bold text-center text-foreground  border-b border-(--border) pb-4">Chat with Antara</header>
+        <section className="surface-card flex h-[calc(100dvh-200px)] sm:h-[calc(100vh-220px)] min-h-[420px] sm:min-h-[560px] flex-col p-4 sm:p-5">
+        <header className="border-b border-(--border) pb-4 text-center">
+          <p className="text-lg font-bold text-foreground">Chat with Antara</p>
+        </header>
        
           {/* Message list */}
           <div ref={scrollRef} className="flex-1 space-y-4 overflow-y-auto pr-1">
@@ -446,12 +448,12 @@ export default function CopilotPage() {
                 />
                 <button
                   type="button"
-                  className="inline-flex items-center gap-2 rounded-lg bg-gray-600 px-4 py-2 text-sm font-semibold text-white transition hover:bg-gray-700 disabled:opacity-50"
+                  className="inline-flex items-center gap-2 rounded-lg bg-gray-600 px-3 py-2 sm:px-4 text-sm font-semibold text-white transition hover:bg-gray-700 disabled:opacity-50"
                   onClick={() => void sendMessage()}
                   disabled={sendMutation.isPending || isRateLimited || input.trim().length === 0}
                 >
                   <Send className="h-4 w-4" />
-                  Send
+                  <span className="hidden sm:inline">Send</span>
                 </button>
               </div>
             )}
@@ -460,10 +462,15 @@ export default function CopilotPage() {
             <div className="mt-2 flex items-center justify-between">
               <p className="text-xs text-(--text-secondary)">
                 {voiceState === "recording"
-                  ? "Speak now — press ■ to stop and send."
+                  ? "Speak — press ■ to stop."
                   : isRateLimited
-                  ? `Rate limited. Try again in ${rateLimitSeconds}s.`
-                  : "Enter to send · Shift+Enter for new line · 🎙 for voice"}
+                  ? `Rate limited. ${rateLimitSeconds}s remaining.`
+                  : (
+                    <>
+                      <span className="hidden sm:inline">Enter to send · Shift+Enter for new line · 🎙 for voice</span>
+                      <span className="sm:hidden">Enter to send · 🎙 for voice</span>
+                    </>
+                  )}
               </p>
 
               <div className="flex items-center gap-1.5">
@@ -513,7 +520,7 @@ export default function CopilotPage() {
         </section>
 
         {/* ── Context sidebar ──────────────────────────────────────────────── */}
-        <aside className="surface-card hidden h-[calc(100vh-220px)] min-h-[560px] overflow-y-auto p-5 xl:block">
+        <aside className="surface-card hidden h-[calc(100dvh-200px)] sm:h-[calc(100vh-220px)] min-h-[420px] sm:min-h-[560px] overflow-y-auto p-5 xl:block">
           <h2 className="text-lg font-semibold">Conversation Insights</h2>
           <p className="mt-1 text-sm text-(--text-secondary)">Contextual support while you chat</p>
 
