@@ -2,11 +2,52 @@ const { GoogleGenerativeAI } = require('@google/generative-ai');
 
 const MENTALBERT_API_URL = process.env.MENTALBERT_API_URL || 'http://127.0.0.1:8001/predict';
 const MENTALBERT_TIMEOUT_MS = Number(process.env.MENTALBERT_TIMEOUT_MS || 8000);
+const GEMINI_MODEL_CANDIDATES = (process.env.GEMINI_MODEL_CANDIDATES || 'gemini-2.0-flash,gemini-2.0-flash-lite')
+  .split(',')
+  .map((model) => model.trim())
+  .filter(Boolean);
 
-function toEmotionFromLabel(label) {
+function toEmotionFromLabel(label, text = '') {
   const normalized = String(label || '').toLowerCase();
-  if (normalized === 'positive') return 'calm';
-  if (normalized === 'negative') return 'stress';
+  const content = String(text || '').toLowerCase();
+
+  const stressKeywords = [
+    'stress', 'stressed', 'overwhelm', 'overwhelmed', 'anxious', 'anxiety', 'panic',
+    'deadline', 'pressure', 'burnout', 'workload', 'racing thoughts', 'can\'t sleep',
+  ];
+  const sadnessKeywords = [
+    'sad', 'depressed', 'depression', 'hopeless', 'empty', 'lonely', 'worthless',
+    'cry', 'crying', 'numb', 'tired of life', 'nothing matters', 'grief',
+  ];
+
+  const stressHits = stressKeywords.reduce((count, keyword) => (
+    content.includes(keyword) ? count + 1 : count
+  ), 0);
+  const sadnessHits = sadnessKeywords.reduce((count, keyword) => (
+    content.includes(keyword) ? count + 1 : count
+  ), 0);
+
+  const inferNegativeEmotion = () => {
+    if (sadnessHits > stressHits) return 'sadness';
+    if (stressHits > sadnessHits) return 'stress';
+    // For ambiguous negative content, sadness is safer than neutral.
+    return 'sadness';
+  };
+
+  if (
+    normalized === 'positive' ||
+    normalized === 'label_1' ||
+    normalized.includes('positive')
+  ) return 'calm';
+
+  if (
+    normalized === 'negative' ||
+    normalized === 'label_0' ||
+    normalized.includes('depress') ||
+    normalized.includes('sad')
+  ) return inferNegativeEmotion();
+
+  if (normalized.includes('stress') || normalized.includes('anx')) return 'stress';
   return 'neutral';
 }
 
@@ -44,7 +85,58 @@ function getModel() {
   }
 
   const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
-  return genAI.getGenerativeModel({ model: 'gemini-1.5-flash' });
+  for (const modelName of GEMINI_MODEL_CANDIDATES) {
+    try {
+      const model = genAI.getGenerativeModel({ model: modelName });
+      return { model, modelName };
+    } catch {
+      // Keep trying model candidates.
+    }
+  }
+
+  return null;
+}
+
+function inferCopingTipFromEmotion(emotion) {
+  if (emotion === 'stress' || emotion === 'anxiety') {
+    return 'Try one 4-7-8 breathing cycle and break your next task into a 10-minute step.';
+  }
+  if (emotion === 'sadness') {
+    return 'Try a small grounding action now: water, short walk, or messaging someone you trust.';
+  }
+  if (emotion === 'anger') {
+    return 'Pause before reacting; write one sentence about what boundary feels crossed.';
+  }
+  return 'Keep journaling daily and notice what activities make you feel a little lighter.';
+}
+
+function buildContextAwareFallbackReply(message, context) {
+  const recentEntries = Array.isArray(context?.recent_entries) ? context.recent_entries : [];
+  const emotions = recentEntries
+    .map((entry) => String(entry?.emotion?.primary || entry?.emotion || 'neutral').toLowerCase())
+    .filter(Boolean);
+
+  const counts = emotions.reduce((acc, emotion) => {
+    acc[emotion] = (acc[emotion] || 0) + 1;
+    return acc;
+  }, {});
+
+  const dominantEmotion = Object.entries(counts).sort((a, b) => b[1] - a[1])[0]?.[0] || 'neutral';
+  const latestEmotion = emotions[0] || dominantEmotion;
+  const patternCount = counts[dominantEmotion] || 0;
+
+  const userMessage = String(message || '').toLowerCase();
+  const asksForMoodInsight = /(mood|journal|pattern|how am i|how is my|feeling lately)/i.test(userMessage);
+
+  if (asksForMoodInsight && recentEntries.length > 0) {
+    return `From your recent journals, your dominant pattern looks like ${dominantEmotion} (${patternCount}/${recentEntries.length} entries), and your latest entry leans ${latestEmotion}. ${inferCopingTipFromEmotion(latestEmotion)} Want me to suggest a simple plan for today based on this?`;
+  }
+
+  if (recentEntries.length > 0) {
+    return `I am here with you. Based on your recent journals, I am noticing more ${dominantEmotion} lately, with the latest entry showing ${latestEmotion}. ${inferCopingTipFromEmotion(latestEmotion)} What felt hardest today?`;
+  }
+
+  return 'I am here with you. Share what happened today, and I will help you reflect on your mood pattern and suggest one practical next step.';
 }
 
 function safeParseJson(text) {
@@ -72,7 +164,7 @@ async function analyzeJournalEntry(text) {
     const prediction = await classifyWithMentalBert(text);
     return {
       emotion: {
-        primary: toEmotionFromLabel(prediction.label),
+        primary: toEmotionFromLabel(prediction.label, text),
         secondary: [],
         intensity: Number(Math.max(0, Math.min(1, prediction.confidence || 0.5)).toFixed(3)),
       },
@@ -130,34 +222,40 @@ async function analyzeJournalEntry(text) {
 }
 
 async function generateSupportiveSummary(input) {
-  const model = getModel();
-  if (!model) {
+  const modelConfig = getModel();
+  if (!modelConfig) {
     return 'You have been doing your best through recent emotional ups and downs. Try to notice what situations increase stress and also what helps you feel calmer.';
   }
 
   const prompt = `Write a supportive 2-3 sentence summary for the user.\nData:\n${JSON.stringify(input, null, 2)}\nConstraints: empathetic, no diagnosis, actionable.`;
   try {
-    const result = await model.generateContent(prompt);
+    const result = await modelConfig.model.generateContent(prompt);
     return result.response.text().trim();
   } catch (error) {
-    console.error('Gemini summary failed:', error.message);
+    console.error('Gemini summary failed:', {
+      model: modelConfig.modelName,
+      message: error.message,
+    });
     return 'You have shown both challenges and moments of recovery this week. Keep tracking what is helping you feel better and reduce pressure where possible.';
   }
 }
 
 async function generateCopilotReply(message, context) {
-  const model = getModel();
-  if (!model) {
-    return "I'm here with you. It sounds like this has been heavy lately. What part of today felt the hardest?";
+  const modelConfig = getModel();
+  if (!modelConfig) {
+    return buildContextAwareFallbackReply(message, context);
   }
 
   const prompt = `You are an empathetic mental health companion. No diagnosis. Keep under 100 words.\nContext:\n${JSON.stringify(context, null, 2)}\nUser message: ${message}`;
   try {
-    const result = await model.generateContent(prompt);
+    const result = await modelConfig.model.generateContent(prompt);
     return result.response.text().trim();
   } catch (error) {
-    console.error('Gemini copilot failed:', error.message);
-    return "I hear you. Thank you for sharing that. Would you like to talk through what triggered this feeling today?";
+    console.error('Gemini copilot failed:', {
+      model: modelConfig.modelName,
+      message: error.message,
+    });
+    return buildContextAwareFallbackReply(message, context);
   }
 }
 
