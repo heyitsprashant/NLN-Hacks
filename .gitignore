@@ -2,6 +2,14 @@
 node_modules/
 .pnpm-store/
 
+# Python virtual environments and caches
+**/.venv/
+**/venv/
+**/__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
 # Next.js
 .next/
 out/
@@ -16,6 +24,8 @@ build/
 *.log
 npm-debug.log*
 pnpm-debug.log*
+yarn-debug.log*
+yarn-error.log*
 
 # OS
 .DS_Store
@@ -37,3 +47,8 @@ prisma/migrations/dev.db
 .vercel
 .turbo
 coverage/
+
+# Runtime and temp files
+*.tmp
+*.temp
+*.cache
