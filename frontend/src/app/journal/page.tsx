@@ -4,6 +4,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useInfiniteQuery, useMutation } from "@tanstack/react-query";
 import toast from "react-hot-toast";
 import { Search, Trash2, Upload, Send, ChevronDown, ArrowDownUp, Filter, Mic, Square, BookOpen } from "lucide-react";
+import SpotlightCard from "@/components/ui/SpotlightCard";
 import api from "@/lib/api";
 import { handleApiError } from "@/lib/errorHandler";
 import { formatReadableDate, formatRelativeTime } from "@/lib/time";
@@ -259,11 +260,18 @@ export default function JournalPage() {
         <div className="flex flex-col gap-4">
 
           {/* Paper notebook card */}
-          <div
-            className="rounded-2xl overflow-hidden"
+          <SpotlightCard
+            className="rounded-2xl overflow-hidden animate-fade-in-paper journal-paper-cursor"
+            spotlightColor="rgba(194,113,79,0.13)"
             style={{
               border: "1px solid rgba(61,112,96,0.11)",
               boxShadow: "0 4px 24px rgba(61,112,96,0.07), 0 1px 4px rgba(61,112,96,0.04)",
+            }}
+            onMouseMove={e => {
+              const el = e.currentTarget;
+              const rect = el.getBoundingClientRect();
+              el.style.setProperty('--mouse-x', `${e.clientX - rect.left}px`);
+              el.style.setProperty('--mouse-y', `${e.clientY - rect.top}px`);
             }}
           >
             {/* Notebook header bar */}
@@ -290,9 +298,13 @@ export default function JournalPage() {
             {/* Ruled paper surface */}
             <div
               style={{
-                background: "#fffdf7",
-                backgroundImage: `repeating-linear-gradient(transparent, transparent 27px, rgba(61,112,96,0.07) 28px)`,
+                background: "#f8f5e4", // old paper beige
+                backgroundImage: `repeating-linear-gradient(transparent, transparent 27px, rgba(194,113,79,0.10) 28px), repeating-linear-gradient(90deg, transparent, transparent 51px, rgba(194,113,79,0.13) 52px)`,
+                boxShadow: "0 2px 24px 0 rgba(194,113,79,0.07)",
+                borderRadius: "0 0 18px 18px",
+                borderTop: "1.5px solid #e2c9a0",
                 position: "relative",
+                fontFamily: 'Lora, Georgia, serif',
               }}
             >
               {/* Left margin line */}
@@ -309,7 +321,7 @@ export default function JournalPage() {
               {/* Line numbers */}
               <div className="absolute top-0 bottom-0 left-0 flex flex-col pt-1.5" style={{ width: "52px", gap: "16px", pointerEvents: "none" }}>
                 {Array.from({ length: 20 }).map((_, i) => (
-                  <span key={i} className="block text-center select-none" style={{ fontSize: "10px", color: "rgba(61,112,96,0.16)", lineHeight: "12px" }}>
+                  <span key={i} className="block text-center select-none" style={{ fontSize: "11px", color: "#a67c52", fontWeight: 600, textShadow: "0 1px 0 #f3e6c4", lineHeight: "12px", letterSpacing: "0.5px" }}>
                     {i + 1}
                   </span>
                 ))}
@@ -327,7 +339,7 @@ export default function JournalPage() {
                 placeholder={voiceState === "recording" ? "Listening… speak your thoughts" : "Begin writing… let your thoughts flow onto the page"}
                 rows={14}
                 aria-label="Journal entry"
-                className="block w-full resize-none bg-transparent outline-none"
+                className="block w-full resize-none bg-transparent outline-none animate-placeholder-pulse"
                 style={{
                   minHeight: "392px",
                   paddingLeft: "68px",
@@ -414,14 +426,14 @@ export default function JournalPage() {
                 type="button"
                 disabled={createMutation.isPending || entryText.trim().length === 0}
                 onClick={() => createMutation.mutate({ content: entryText.trim(), entryDate })}
-                className="inline-flex items-center gap-2 rounded-lg px-4 py-2 text-sm font-semibold text-white transition disabled:cursor-not-allowed disabled:opacity-50"
+                className="inline-flex items-center gap-2 rounded-lg px-4 py-2 text-sm font-semibold text-white transition disabled:cursor-not-allowed disabled:opacity-50 animate-save-btn"
                 style={{ background: "linear-gradient(135deg, #2a5045 0%, #3d7060 100%)" }}
               >
                 <Send className="h-4 w-4" />
                 {createMutation.isPending ? "Saving…" : "Save Entry"}
               </button>
             </div>
-          </div>
+          </SpotlightCard>
 
           {/* File upload */}
           <div

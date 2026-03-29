@@ -1,3 +1,73 @@
+/* ── Global animated cursor and radial highlight ─────────────────────── */
+.global-cursor-bg {
+  cursor: url('data:image/svg+xml;utf8,<svg width="32" height="32" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg"><circle cx="16" cy="16" r="10" fill="%23e2c9a0" fill-opacity="0.7"/><circle cx="16" cy="16" r="5" fill="%23c2714f" fill-opacity="0.5"/></svg>') 16 16, pointer;
+  position: relative;
+  z-index: 0;
+}
+
+.global-cursor-bg::after {
+  content: "";
+  pointer-events: none;
+  position: absolute;
+  left: var(--mouse-x, 50%);
+  top: var(--mouse-y, 50%);
+  width: 180px;
+  height: 180px;
+  margin-left: -90px;
+  margin-top: -90px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(226,201,160,0.13) 0%, rgba(194,113,79,0.08) 60%, transparent 100%);
+  opacity: 0.5;
+  transition: left 0.13s cubic-bezier(0.4,0,0.2,1), top 0.13s cubic-bezier(0.4,0,0.2,1);
+  z-index: 0;
+}
+/* ── Custom animated cursor for journal paper ─────────────────────────── */
+.journal-paper-cursor {
+  cursor: url('data:image/svg+xml;utf8,<svg width="32" height="32" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg"><circle cx="16" cy="16" r="10" fill="%23e2c9a0" fill-opacity="0.7"/><circle cx="16" cy="16" r="5" fill="%23c2714f" fill-opacity="0.5"/></svg>') 16 16, pointer;
+  position: relative;
+  z-index: 2;
+}
+
+.journal-paper-cursor::after {
+  content: "";
+  pointer-events: none;
+  position: absolute;
+  left: var(--mouse-x, 50%);
+  top: var(--mouse-y, 50%);
+  width: 120px;
+  height: 120px;
+  margin-left: -60px;
+  margin-top: -60px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(226,201,160,0.18) 0%, rgba(194,113,79,0.10) 60%, transparent 100%);
+  opacity: 0.7;
+  transition: left 0.13s cubic-bezier(0.4,0,0.2,1), top 0.13s cubic-bezier(0.4,0,0.2,1);
+  z-index: 1;
+}
+/* ── Journal Animations ─────────────────────────────────────────────── */
+.animate-fade-in-paper {
+  animation: fadeInPaper 0.9s cubic-bezier(0.33, 1, 0.68, 1);
+}
+@keyframes fadeInPaper {
+  from { opacity: 0; transform: translateY(24px) scale(0.98); }
+  to   { opacity: 1; transform: none; }
+}
+
+.animate-save-btn {
+  transition: transform 0.18s cubic-bezier(0.33, 1, 0.68, 1), box-shadow 0.18s;
+}
+.animate-save-btn:hover:not(:disabled) {
+  transform: scale(1.045);
+  box-shadow: 0 4px 18px 0 rgba(61,112,96,0.13);
+}
+
+.animate-placeholder-pulse::placeholder {
+  animation: placeholderPulse 2.2s infinite cubic-bezier(0.4, 0, 0.2, 1);
+}
+@keyframes placeholderPulse {
+  0%, 100% { opacity: 0.7; }
+  50% { opacity: 1; }
+}
 @import "tailwindcss";
 
 :root {
@@ -24,9 +94,9 @@
   --emotion-calm:    #6fb5a8;
 
   /* Surfaces & text */
-  --background:     #ffffff;          /* pure white canvas */
-  --surface:        #ffffff;
-  --surface-muted:  #f5f9f7;          /* faint green-white for card hover */
+  --background:     #f8f5ec;          /* warm beige canvas */
+  --surface:        #fdfaf6;          /* lighter beige for cards */
+  --surface-muted:  #f3ede3;          /* muted beige for card hover */
   --text-primary:   #1a3530;          /* near-black forest green */
   --text-secondary: #3d5f50;          /* readable dark sage */
   --border:         rgba(42,80,69,0.14);
@@ -44,8 +114,8 @@
 }
 
 body {
-  /* Pure white — dark green + lavender pop against it with maximum contrast */
-  background: #ffffff;
+  /* Warm beige background for a modern, inviting look */
+  background: var(--background);
   color: var(--text-primary);
   font-family: var(--font-nunito), system-ui, -apple-system, sans-serif;
   overflow-x: hidden;

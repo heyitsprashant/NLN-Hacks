@@ -3,6 +3,7 @@ import { Nunito, Geist_Mono, Lora } from "next/font/google";
 import "./globals.css";
 import { Providers } from "./providers";
 import AppShell from "@/components/site/AppShell";
+import GlobalCursorBg from "@/components/ui/GlobalCursorBg";
 
 const nunito = Nunito({
   variable: "--font-nunito",
@@ -41,10 +42,12 @@ export default function RootLayout({
       lang="en"
       className={`${nunito.variable} ${geistMono.variable} ${lora.variable} h-full antialiased`}
     >
-      <body className="min-h-full bg-background text-foreground overflow-x-hidden">
-        <Providers>
-          <AppShell>{children}</AppShell>
-        </Providers>
+      <body>
+        <GlobalCursorBg>
+          <Providers>
+            <AppShell>{children}</AppShell>
+          </Providers>
+        </GlobalCursorBg>
       </body>
     </html>
   );
