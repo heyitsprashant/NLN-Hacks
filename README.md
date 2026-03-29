@@ -1,6 +1,6 @@
 # Antara Mental Health Support Platform
 
-Antara is a multi-agent style support system where each module has a clear job: journaling captures feelings, ML reads emotional patterns, the copilot responds with context, the dashboard summarizes trends, voice calling provides live support, and alerts notify trusted contacts when needed. In simple terms, the system works like a care team that shares context safely so every feature understands the user journey.
+Antara is a culturally-sensitive mental health companion designed for communities where seeking help carries stigma. Users journal privately in their own language(future goal), AI detects early signs of distress without judgment, and the system provides anonymous support through chat and voice—eliminating the shame of traditional therapy. When patterns indicate risk, trusted family members receive caring alerts framed as "check-ins," not diagnoses, respecting cultural norms while ensuring safety. By normalizing daily emotional check-ins and keeping support invisible yet accessible, Antara breaks silence around mental health in conservative settings.
 
 ## Team (5 Members)
 
@@ -103,9 +103,7 @@ Primary route files:
 - [backend/routes/settings.js](backend/routes/settings.js)
 - [backend/routes/call.js](backend/routes/call.js)
 
-## Final Setup (No Hardcoded Credentials)
 
-Use environment variables only, and never commit secrets in any file.
 
 ### 1) Prerequisites
 
@@ -113,6 +111,12 @@ Use environment variables only, and never commit secrets in any file.
 - npm 9+
 - Python 3.10+
 - Ngrok account (for Twilio voice webhook testing)
+
+## Extra References
+
+- Backend guide: [backend/README.md](backend/README.md)
+- Frontend guide: [frontend/README.md](frontend/README.md)
+- MentalBERT service guide: [mentalbert_service/README.md](mentalbert_service/README.md)
 
 ### 2) Install Dependencies
 
@@ -233,14 +237,5 @@ Example endpoint paths are implemented in [backend/routes/call.js](backend/route
 
 Add trusted contacts from the Settings page, then the backend stores and uses those recipients for alerts and journal-triggered email sends. Recipients are managed through [backend/routes/settings.js](backend/routes/settings.js), and sending is handled in [backend/services/emailService.js](backend/services/emailService.js) plus [backend/services/alertSystem.js](backend/services/alertSystem.js).
 
-## Extra References
 
-- Backend guide: [backend/README.md](backend/README.md)
-- Frontend guide: [frontend/README.md](frontend/README.md)
-- MentalBERT service guide: [mentalbert_service/README.md](mentalbert_service/README.md)
 
-## Final Submission Safety Checklist
-
-- Confirm no secrets are present in committed files.
-- Confirm only placeholders are documented in README and env examples.
-- Confirm trusted contacts and SMTP credentials are set only through environment or runtime settings.
