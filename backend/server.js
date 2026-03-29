@@ -9,9 +9,30 @@ const app = express();
 const port = Number(process.env.PORT || 3001);
 const { startScheduler } = require('./jobs/scheduler');
 
+const defaultAllowedOrigins = [
+  'http://localhost:3000',
+  'http://localhost:3002',
+  'http://127.0.0.1:3000',
+  'http://127.0.0.1:3002',
+];
+
+const allowedOrigins = new Set(
+  [
+    process.env.FRONTEND_URL,
+    ...(process.env.FRONTEND_URLS || '').split(','),
+    ...defaultAllowedOrigins,
+  ]
+    .map((value) => String(value || '').trim())
+    .filter(Boolean),
+);
+
 app.use(
   cors({
-    origin: process.env.FRONTEND_URL || 'http://localhost:3000',
+    origin(origin, callback) {
+      if (!origin) return callback(null, true);
+      if (allowedOrigins.has(origin)) return callback(null, true);
+      return callback(new Error(`CORS blocked for origin: ${origin}`));
+    },
     credentials: true,
   }),
 );
@@ -50,10 +71,20 @@ app.use((err, req, res, next) => {
   res.status(500).json({ success: false, message: 'Internal server error' });
 });
 
-app.listen(port, () => {
+const server = app.listen(port, () => {
   console.log(`Backend running at http://localhost:${port}`);
   if (String(process.env.ENABLE_SCHEDULER || 'true').toLowerCase() === 'true') {
     startScheduler();
     console.log('Scheduler started');
   }
+});
+
+server.on('error', (err) => {
+  if (err.code === 'EADDRINUSE') {
+    console.error(`Port ${port} is already in use. Stop the existing process or change PORT in .env.`);
+    process.exit(1);
+  }
+
+  console.error('Failed to start backend server:', err);
+  process.exit(1);
 });

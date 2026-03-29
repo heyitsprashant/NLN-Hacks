@@ -1,12 +1,25 @@
 import axios, { AxiosError } from "axios";
 
+function resolveApiBaseUrl(): string {
+  if (process.env.NEXT_PUBLIC_API_URL) return process.env.NEXT_PUBLIC_API_URL;
+
+  if (typeof window !== "undefined") {
+    const { hostname, protocol } = window.location;
+    if (hostname === "localhost" || hostname === "127.0.0.1") {
+      return `${protocol}//${hostname}:3001`;
+    }
+  }
+
+  return "";
+}
+
 /**
  * Shared API client for calling the backend.
  * - Uses `withCredentials` so the browser automatically sends the httpOnly JWT cookie.
  * - Optionally also supports a localStorage Bearer token fallback for debugging/dev.
  */
 const api = axios.create({
-  baseURL: process.env.NEXT_PUBLIC_API_URL || "",
+  baseURL: resolveApiBaseUrl(),
   withCredentials: true,
   headers: {
     "Content-Type": "application/json",
